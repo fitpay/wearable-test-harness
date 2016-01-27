@@ -117,10 +117,21 @@
                                 </constraints>
                                 <levelIndicatorCell key="cell" alignment="left" maxValue="100" numberOfMajorTickMarks="1" levelIndicatorStyle="continuousCapacity" id="FrT-e9-IHj"/>
                             </levelIndicator>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="cW2-Pc-PvX">
+                                <rect key="frame" x="18" y="123" width="604" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="Ylp-9q-weM">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                         </subviews>
                         <constraints>
+                            <constraint firstItem="cW2-Pc-PvX" firstAttribute="top" secondItem="Rpc-xR-YvX" secondAttribute="bottom" constant="8" symbolic="YES" id="8CL-2m-GfH"/>
+                            <constraint firstItem="cW2-Pc-PvX" firstAttribute="trailing" secondItem="NLi-Fc-j2A" secondAttribute="trailing" id="ETM-vx-0F3"/>
                             <constraint firstItem="Rpc-xR-YvX" firstAttribute="centerX" secondItem="Mfp-y1-Akf" secondAttribute="centerX" id="HIX-RS-Sqh"/>
                             <constraint firstItem="Rpc-xR-YvX" firstAttribute="top" secondItem="Mfp-y1-Akf" secondAttribute="bottom" constant="20" symbolic="YES" id="PDl-xN-qew"/>
+                            <constraint firstItem="cW2-Pc-PvX" firstAttribute="leading" secondItem="NLi-Fc-j2A" secondAttribute="leading" id="VJG-db-5JT"/>
                             <constraint firstItem="NLi-Fc-j2A" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="105" id="WbI-6f-z2a"/>
                             <constraint firstItem="NLi-Fc-j2A" firstAttribute="centerX" secondItem="Mfp-y1-Akf" secondAttribute="centerX" id="X75-fq-Zvm"/>
                             <constraint firstItem="Mfp-y1-Akf" firstAttribute="top" secondItem="NLi-Fc-j2A" secondAttribute="bottom" constant="34" id="dCC-ZL-mw0"/>
@@ -129,6 +140,7 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="continuationLabel" destination="cW2-Pc-PvX" id="06I-1s-zjW"/>
                         <outlet property="statusLabel" destination="4et-30-dSj" id="KEc-gc-qD5"/>
                         <outlet property="testButton" destination="Mfp-y1-Akf" id="UTd-jZ-1RT"/>
                         <outlet property="txProgress" destination="Rpc-xR-YvX" id="gGi-sn-LNR"/>

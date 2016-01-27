@@ -14,10 +14,11 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
 
     @IBOutlet weak var statusLabel: NSTextFieldCell!
     
+    @IBOutlet weak var continuationLabel: NSTextField!
     @IBOutlet weak var txProgress: NSLevelIndicator!
     
     @IBAction func testContinuation(sender: AnyObject) {
-        self.statusLabel.stringValue = "Testing Continuation"
+        self.continuationLabel.stringValue = "starting continuation test"
         
         let bytesCount = 1000
         var randomBytes = [UInt8](count: bytesCount, repeatedValue: 0)
@@ -51,6 +52,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         centralManager = CBCentralManager(delegate: self, queue: nil)
         
         self.statusLabel.stringValue = ""
+        self.continuationLabel.stringValue = ""
         self.testButton.enabled = false
         self.txProgress.doubleValue = 0.0
         self.txProgress.displayIfNeeded()
@@ -138,7 +140,11 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             NSOperationQueue.mainQueue().addOperationWithBlock {
                 self.txProgress.doubleValue = d
                 self.txProgress.displayIfNeeded()
+                
+                self.continuationLabel.stringValue = String(format: "%.1f completed", d)
             }
+        } else if characteristic.UUID == ContinuationControlCharacteristic {
+            self.continuationLabel.stringValue = "control characteristic written"
         }
     }
     
