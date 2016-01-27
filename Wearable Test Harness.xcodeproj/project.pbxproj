@@ -1,0 +1,467 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C5C98ED91C583E2B0021279D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C98ED81C583E2B0021279D /* AppDelegate.swift */; };
+		C5C98EDB1C583E2B0021279D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C98EDA1C583E2B0021279D /* ViewController.swift */; };
+		C5C98EDD1C583E2B0021279D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C5C98EDC1C583E2B0021279D /* Assets.xcassets */; };
+		C5C98EE01C583E2B0021279D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C5C98EDE1C583E2B0021279D /* Main.storyboard */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C5C98EE71C583E2B0021279D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C5C98ECD1C583E2B0021279D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C5C98ED41C583E2B0021279D;
+			remoteInfo = "BLE Test";
+		};
+		C5C98EF21C583E2B0021279D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C5C98ECD1C583E2B0021279D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C5C98ED41C583E2B0021279D;
+			remoteInfo = "BLE Test";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		C5C98ED51C583E2B0021279D /* Wearable Test Harness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Wearable Test Harness.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C5C98ED81C583E2B0021279D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		C5C98EDA1C583E2B0021279D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		C5C98EDC1C583E2B0021279D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C5C98EDF1C583E2B0021279D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		C5C98EE11C583E2B0021279D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C5C98EE61C583E2B0021279D /* Wearable Test Harness.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Wearable Test Harness.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C5C98EF11C583E2B0021279D /* Wearable Test Harness.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Wearable Test Harness.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C5C98ED21C583E2B0021279D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5C98EE31C583E2B0021279D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5C98EEE1C583E2B0021279D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C5C98ECC1C583E2B0021279D = {
+			isa = PBXGroup;
+			children = (
+				C5C98ED71C583E2B0021279D /* Wearable Test Harness */,
+				C5C98ED61C583E2B0021279D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		C5C98ED61C583E2B0021279D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C5C98ED51C583E2B0021279D /* Wearable Test Harness.app */,
+				C5C98EE61C583E2B0021279D /* Wearable Test Harness.xctest */,
+				C5C98EF11C583E2B0021279D /* Wearable Test Harness.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C5C98ED71C583E2B0021279D /* Wearable Test Harness */ = {
+			isa = PBXGroup;
+			children = (
+				C5C98ED81C583E2B0021279D /* AppDelegate.swift */,
+				C5C98EDA1C583E2B0021279D /* ViewController.swift */,
+				C5C98EDC1C583E2B0021279D /* Assets.xcassets */,
+				C5C98EDE1C583E2B0021279D /* Main.storyboard */,
+				C5C98EE11C583E2B0021279D /* Info.plist */,
+			);
+			path = "Wearable Test Harness";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C5C98ED41C583E2B0021279D /* Wearable Test Harness */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C5C98EFA1C583E2B0021279D /* Build configuration list for PBXNativeTarget "Wearable Test Harness" */;
+			buildPhases = (
+				C5C98ED11C583E2B0021279D /* Sources */,
+				C5C98ED21C583E2B0021279D /* Frameworks */,
+				C5C98ED31C583E2B0021279D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Wearable Test Harness";
+			productName = "BLE Test";
+			productReference = C5C98ED51C583E2B0021279D /* Wearable Test Harness.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C5C98EE51C583E2B0021279D /* Wearable Test HarnessTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C5C98EFD1C583E2B0021279D /* Build configuration list for PBXNativeTarget "Wearable Test HarnessTests" */;
+			buildPhases = (
+				C5C98EE21C583E2B0021279D /* Sources */,
+				C5C98EE31C583E2B0021279D /* Frameworks */,
+				C5C98EE41C583E2B0021279D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C5C98EE81C583E2B0021279D /* PBXTargetDependency */,
+			);
+			name = "Wearable Test HarnessTests";
+			productName = "BLE TestTests";
+			productReference = C5C98EE61C583E2B0021279D /* Wearable Test Harness.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		C5C98EF01C583E2B0021279D /* Wearable Test HarnessUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C5C98F001C583E2B0021279D /* Build configuration list for PBXNativeTarget "Wearable Test HarnessUITests" */;
+			buildPhases = (
+				C5C98EED1C583E2B0021279D /* Sources */,
+				C5C98EEE1C583E2B0021279D /* Frameworks */,
+				C5C98EEF1C583E2B0021279D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C5C98EF31C583E2B0021279D /* PBXTargetDependency */,
+			);
+			name = "Wearable Test HarnessUITests";
+			productName = "BLE TestUITests";
+			productReference = C5C98EF11C583E2B0021279D /* Wearable Test Harness.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C5C98ECD1C583E2B0021279D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 0720;
+				LastUpgradeCheck = 0720;
+				ORGANIZATIONNAME = "Scott Stevelinck";
+				TargetAttributes = {
+					C5C98ED41C583E2B0021279D = {
+						CreatedOnToolsVersion = 7.2;
+					};
+					C5C98EE51C583E2B0021279D = {
+						CreatedOnToolsVersion = 7.2;
+					};
+					C5C98EF01C583E2B0021279D = {
+						CreatedOnToolsVersion = 7.2;
+					};
+				};
+			};
+			buildConfigurationList = C5C98ED01C583E2B0021279D /* Build configuration list for PBXProject "Wearable Test Harness" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C5C98ECC1C583E2B0021279D;
+			productRefGroup = C5C98ED61C583E2B0021279D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C5C98ED41C583E2B0021279D /* Wearable Test Harness */,
+				C5C98EE51C583E2B0021279D /* Wearable Test HarnessTests */,
+				C5C98EF01C583E2B0021279D /* Wearable Test HarnessUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C5C98ED31C583E2B0021279D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5C98EDD1C583E2B0021279D /* Assets.xcassets in Resources */,
+				C5C98EE01C583E2B0021279D /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5C98EE41C583E2B0021279D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5C98EEF1C583E2B0021279D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C5C98ED11C583E2B0021279D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5C98EDB1C583E2B0021279D /* ViewController.swift in Sources */,
+				C5C98ED91C583E2B0021279D /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5C98EE21C583E2B0021279D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C5C98EED1C583E2B0021279D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C5C98EE81C583E2B0021279D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C5C98ED41C583E2B0021279D /* Wearable Test Harness */;
+			targetProxy = C5C98EE71C583E2B0021279D /* PBXContainerItemProxy */;
+		};
+		C5C98EF31C583E2B0021279D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C5C98ED41C583E2B0021279D /* Wearable Test Harness */;
+			targetProxy = C5C98EF21C583E2B0021279D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		C5C98EDE1C583E2B0021279D /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				C5C98EDF1C583E2B0021279D /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		C5C98EF81C583E2B0021279D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C5C98EF91C583E2B0021279D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		C5C98EFB1C583E2B0021279D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "Wearable Test Harness/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.fitpay.wearable-test-harness";
+				PRODUCT_NAME = "Wearable Test Harness";
+			};
+			name = Debug;
+		};
+		C5C98EFC1C583E2B0021279D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "Wearable Test Harness/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.fitpay.wearable-test-harness";
+				PRODUCT_NAME = "Wearable Test Harness";
+			};
+			name = Release;
+		};
+		C5C98EFE1C583E2B0021279D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "BLE TestTests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.fitpay.BLE-TestTests";
+				PRODUCT_NAME = "Wearable Test Harness";
+			};
+			name = Debug;
+		};
+		C5C98EFF1C583E2B0021279D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "BLE TestTests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.fitpay.BLE-TestTests";
+				PRODUCT_NAME = "Wearable Test Harness";
+			};
+			name = Release;
+		};
+		C5C98F011C583E2B0021279D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "BLE TestUITests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.fitpay.BLE-TestUITests";
+				PRODUCT_NAME = "Wearable Test Harness";
+				PROVISIONING_PROFILE = "";
+				USES_XCTRUNNER = YES;
+			};
+			name = Debug;
+		};
+		C5C98F021C583E2B0021279D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "BLE TestUITests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.fitpay.BLE-TestUITests";
+				PRODUCT_NAME = "Wearable Test Harness";
+				PROVISIONING_PROFILE = "";
+				USES_XCTRUNNER = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C5C98ED01C583E2B0021279D /* Build configuration list for PBXProject "Wearable Test Harness" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5C98EF81C583E2B0021279D /* Debug */,
+				C5C98EF91C583E2B0021279D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C5C98EFA1C583E2B0021279D /* Build configuration list for PBXNativeTarget "Wearable Test Harness" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5C98EFB1C583E2B0021279D /* Debug */,
+				C5C98EFC1C583E2B0021279D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C5C98EFD1C583E2B0021279D /* Build configuration list for PBXNativeTarget "Wearable Test HarnessTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5C98EFE1C583E2B0021279D /* Debug */,
+				C5C98EFF1C583E2B0021279D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C5C98F001C583E2B0021279D /* Build configuration list for PBXNativeTarget "Wearable Test HarnessUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5C98F011C583E2B0021279D /* Debug */,
+				C5C98F021C583E2B0021279D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C5C98ECD1C583E2B0021279D /* Project object */;
+}
