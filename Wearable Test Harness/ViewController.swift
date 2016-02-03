@@ -11,7 +11,7 @@ import CoreBluetooth
 import SecurityFoundation
 
 class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
-
+    
     @IBOutlet weak var sequenceIdTextField: NSTextField!
     @IBOutlet weak var statusLabel: NSTextFieldCell!
     @IBOutlet weak var continuationLabel: NSTextField!
@@ -26,6 +26,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         
         let apduPacket = NSMutableData()
         var sq16 = UInt16(bigEndian: sequenceId)
+        apduPacket.appendData(RESERVED_FOR_FUTURE_USE)
         apduPacket.appendBytes(&sq16, length: sizeofValue(sequenceId))
         apduPacket.appendData(dataFromHexString(apduRequest.stringValue)!)
         
@@ -71,6 +72,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     let START_CONTROL: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     let EOM_CONTROL: NSData = NSData(bytes: [0x01] as [UInt8], length: 1)
+    let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     
     let PaymentServiceUUID = CBUUID(string: "d7cc1dc2-3603-4e71-bce6-e3b1551633e0")
     let ContinuationControlCharacteristic = CBUUID(string: "cacc2825-0a2b-4cf2-a1a4-b9db27691382")
