@@ -12,20 +12,26 @@ import SecurityFoundation
 
 class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
 
+    @IBOutlet weak var sequenceIdTextField: NSTextField!
     @IBOutlet weak var statusLabel: NSTextFieldCell!
     @IBOutlet weak var continuationLabel: NSTextField!
     @IBOutlet weak var txProgress: NSLevelIndicator!
     @IBOutlet weak var apduRequest: NSTextField!
     @IBOutlet weak var apduResult: NSTextField!
     @IBOutlet weak var apduButton: NSButton!
+    @IBOutlet weak var continuationStepper: NSStepper!
     
     @IBAction func sendApdu(sender: AnyObject) {
         print(apduRequest.stringValue)
         
-        let data = dataFromHexString(apduRequest.stringValue);
+        let apduPacket = NSMutableData()
+        var sq16 = UInt16(bigEndian: sequenceId)
+        apduPacket.appendBytes(&sq16, length: sizeofValue(sequenceId))
+        apduPacket.appendData(dataFromHexString(apduRequest.stringValue)!)
+        
         self.apduResult.stringValue = ""
         
-        wearablePeripheral.writeValue(data!, forCharacteristic: apduControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+        wearablePeripheral.writeValue(apduPacket, forCharacteristic: apduControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
     }
     
     @IBAction func testContinuation(sender: AnyObject) {
@@ -53,6 +59,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     var wearablePeripheral : CBPeripheral!
     var continuationValue: Int = 1
     
+    var autoincrementSequenceId: Bool = true
+    var sequenceId: UInt16 = 0
     var packetNumber: UInt16 = 0
     var totalPackets: Int = 0
     var sentPackets: Int = 0
@@ -81,9 +89,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.apduRequest.stringValue = "FF"
         self.statusLabel.stringValue = ""
         self.continuationLabel.stringValue = ""
-        self.testButton.enabled = false
-        self.apduRequest.enabled = false
-        self.apduButton.enabled = false
+        self.disableUi()
         
         self.txProgress.doubleValue = 0.0
         self.txProgress.displayIfNeeded()
@@ -124,9 +130,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     func centralManager(central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: NSError?) {
-        self.testButton.enabled = false
-        self.apduRequest.enabled = false
-        self.apduButton.enabled = false
+        self.disableUi()
         self.statusLabel.stringValue = "Searching for FitPay Wearable"
         central.scanForPeripheralsWithServices(nil, options: nil)
     }
@@ -136,10 +140,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             let thisService = service as CBService
             if thisService.UUID == PaymentServiceUUID {
                 self.statusLabel.stringValue = "FitPay Payment Service Found"
-                self.testButton.enabled = true
-                self.apduRequest.enabled = true
-                self.apduButton.enabled = true
                 peripheral.discoverCharacteristics(nil, forService: thisService)
+                self.enableUi()
             }
         }
     }
@@ -168,8 +170,29 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             let elapsedTime: Double = Double(NSDate.timeIntervalSinceReferenceDate() - startTime) * 1000
             let elapsedTimeStr: String = String(format: "%0.2f", elapsedTime)
             
+            print("raw apdu result [\(hexString(characteristic.value))]")
+            
+            // probably not the best way to do this, i'm clueless in swift
+            // https://www.snip2code.com/Snippet/190882/Heart-Rate-Monitor-Example(Swift)
+            var buffer = [UInt8](count: (characteristic.value?.length)!, repeatedValue: 0x00)
+            characteristic.value?.getBytes(&buffer, length: buffer.count)
+            
+            var resultCode:UInt8?
+            resultCode = UInt8(buffer[0])
+            
+            var recvSeqId:UInt16?
+            recvSeqId = UInt16(buffer[1]) << 8
+            recvSeqId = recvSeqId! | UInt16(buffer[2])
+            
             self.apduResult.stringValue = "\(hexString(characteristic.value))"
-            self.continuationLabel.stringValue = "apdu result received, \(elapsedTimeStr)ms"
+            self.continuationLabel.stringValue = "apdu result code \(resultCode!) received for sequenceId \(recvSeqId!), \(elapsedTimeStr)ms"
+            
+            if self.autoincrementSequenceId.boolValue {
+                print("incrementing sequenceId")
+                sequenceIdTextField.stringValue = String(++self.sequenceId)
+            } else {
+                print("skipping auto increment")
+            }
         }
     }
     
@@ -179,7 +202,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     
     func peripheral(peripheral: CBPeripheral, didWriteValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        print("write value \(characteristic.UUID)")
+        print("write value: \(characteristic.UUID), error: \(error)")
         if characteristic.UUID == ContinuationPacketCharacteristic {
             let d: Double = Double(Int(sentPackets++)) / Double(totalPackets) * 100
             print(d)
@@ -196,8 +219,12 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             
            self.continuationLabel.stringValue = "control characteristic written, total time \(elapsedTimeStr)ms"
         } else if characteristic.UUID == APDUControlCharacteristic {
-            self.continuationLabel.stringValue = "apdu sent [\(self.apduRequest.stringValue)], waiting for response..."
-            self.startTime = NSDate.timeIntervalSinceReferenceDate()
+            if error != nil {
+                self.continuationLabel.stringValue = "apdu send error [\(hexString(characteristic.value))]: \(error?.localizedDescription)"
+            } else {
+                self.continuationLabel.stringValue = "apdu sent [\(self.apduRequest.stringValue)], waiting for response..."
+                self.startTime = NSDate.timeIntervalSinceReferenceDate()
+            }
         }
     }
     
@@ -274,6 +301,20 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         }
         
         return s
+    }
+    
+    func disableUi() {
+        self.testButton.enabled = false
+        self.apduRequest.enabled = false
+        self.apduButton.enabled = false
+        self.sequenceIdTextField.enabled = false
+    }
+    
+    func enableUi() {
+        self.testButton.enabled = true
+        self.apduRequest.enabled = true
+        self.apduButton.enabled = true
+        self.sequenceIdTextField.enabled = true
     }
 }
 

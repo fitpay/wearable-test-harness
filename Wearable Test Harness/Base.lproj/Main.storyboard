@@ -93,14 +93,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="640" height="383"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="NLi-Fc-j2A">
-                                <rect key="frame" x="18" y="304" width="604" height="39"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="4et-30-dSj">
-                                    <font key="font" metaFont="system" size="32"/>
-                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                </textFieldCell>
-                            </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="cW2-Pc-PvX">
                                 <rect key="frame" x="18" y="29" width="604" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="Ylp-9q-weM">
@@ -196,18 +188,8 @@
                                     <rect key="frame" x="1" y="1" width="287" height="155"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YLd-qV-y79">
-                                            <rect key="frame" x="86" y="88" width="111" height="32"/>
-                                            <buttonCell key="cell" type="push" title="Send APDU" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="mWN-Pk-kIL">
-                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system"/>
-                                            </buttonCell>
-                                            <connections>
-                                                <action selector="sendApdu:" target="XfG-lQ-9wD" id="DQE-RQ-45q"/>
-                                            </connections>
-                                        </button>
                                         <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kvL-mH-ydL">
-                                            <rect key="frame" x="11" y="124" width="261" height="22"/>
+                                            <rect key="frame" x="11" y="73" width="199" height="22"/>
                                             <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="APDU" drawsBackground="YES" id="ie7-EG-TLO">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -230,11 +212,63 @@
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
+                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HfP-Z7-kmD">
+                                            <rect key="frame" x="114" y="126" width="96" height="22"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="9hT-dJ-VCO">
+                                                <numberFormatter key="formatter" formatterBehavior="default10_4" numberStyle="decimal" minimumIntegerDigits="1" maximumIntegerDigits="2000000000" maximumFractionDigits="3" id="5VR-8h-ifr"/>
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                            <connections>
+                                                <binding destination="XfG-lQ-9wD" name="value" keyPath="sequenceId" id="az4-Tj-8b5">
+                                                    <dictionary key="options">
+                                                        <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                                    </dictionary>
+                                                </binding>
+                                            </connections>
+                                        </textField>
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="wUV-VM-4MC">
+                                            <rect key="frame" x="18" y="129" width="81" height="17"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Sequence ID" id="jo4-fl-NKx">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JK3-m1-NOm">
+                                            <rect key="frame" x="112" y="102" width="115" height="18"/>
+                                            <buttonCell key="cell" type="check" title="Auto Increment" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="ALB-1h-b2B">
+                                                <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <binding destination="XfG-lQ-9wD" name="value" keyPath="autoincrementSequenceId" id="lLd-k1-Jgd"/>
+                                            </connections>
+                                        </button>
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YLd-qV-y79">
+                                            <rect key="frame" x="207" y="67" width="71" height="32"/>
+                                            <buttonCell key="cell" type="push" title="Send" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="mWN-Pk-kIL">
+                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="sendApdu:" target="XfG-lQ-9wD" id="DQE-RQ-45q"/>
+                                            </connections>
+                                        </button>
                                     </subviews>
                                 </view>
                                 <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                                 <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             </box>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="NLi-Fc-j2A">
+                                <rect key="frame" x="18" y="304" width="604" height="39"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="4et-30-dSj">
+                                    <font key="font" metaFont="system" size="32"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                            </textField>
                         </subviews>
                         <constraints>
                             <constraint firstItem="NLi-Fc-j2A" firstAttribute="leading" secondItem="cW2-Pc-PvX" secondAttribute="leading" id="2PS-8Y-fyt"/>
@@ -250,6 +284,8 @@
                         <outlet property="apduRequest" destination="kvL-mH-ydL" id="wRv-aP-TDT"/>
                         <outlet property="apduResult" destination="RK2-GG-Jju" id="qpv-BU-xdj"/>
                         <outlet property="continuationLabel" destination="cW2-Pc-PvX" id="06I-1s-zjW"/>
+                        <outlet property="continuationStepper" destination="gxU-6h-TkB" id="AHd-4t-nrr"/>
+                        <outlet property="sequenceIdTextField" destination="HfP-Z7-kmD" id="Vag-e5-XKo"/>
                         <outlet property="statusLabel" destination="4et-30-dSj" id="KEc-gc-qD5"/>
                         <outlet property="testButton" destination="Mfp-y1-Akf" id="UTd-jZ-1RT"/>
                         <outlet property="txProgress" destination="Rpc-xR-YvX" id="gGi-sn-LNR"/>
