@@ -22,7 +22,18 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     @IBOutlet weak var continuationStepper: NSStepper!
     
     @IBAction func sendApdu(sender: AnyObject) {
-        print(apduRequest.stringValue)
+        print("sending apdu:  \(apduRequest.stringValue)")
+        if (apduRequest.stringValue.characters.count % 2 != 0) {
+            apduRequest.stringValue = apduRequest.stringValue + "0";
+        }
+
+        var withContinuation = false;
+        let data = NSMutableData()
+        data.appendData(dataFromHexString(apduRequest.stringValue)!)
+        if (data.length > 17) {
+            debugPrint("APDU length : \(data.length) requires continuation")
+            withContinuation = true
+        }
         
         let apduPacket = NSMutableData()
         var sq16 = UInt16(bigEndian: sequenceId)
@@ -31,6 +42,13 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         apduPacket.appendData(dataFromHexString(apduRequest.stringValue)!)
         
         self.apduResult.stringValue = ""
+        
+        if (withContinuation) {
+            sendContinuation(apduPacket)
+            return
+        }
+        
+        debugPrint("... write apdu packet: \(apduPacket) to characteristic: \(apduControlCharacteristic.UUID), length: \(apduPacket.length)")
         
         wearablePeripheral.writeValue(apduPacket, forCharacteristic: apduControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
     }
@@ -104,6 +122,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
 
     func centralManagerDidUpdateState(central: CBCentralManager) {
+        debugPrint("centralManagerDidUpdateState invoked")
         if central.state == CBCentralManagerState.PoweredOn {
             self.statusLabel.stringValue = "Searching for FitPay Wearable"
             central.scanForPeripheralsWithServices(nil, options: nil)
@@ -113,10 +132,12 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     func centralManager(central: CBCentralManager, didDiscoverPeripheral peripheral: CBPeripheral, advertisementData: [String : AnyObject], RSSI: NSNumber) {
+        //debugPrint("discovered peripheral: + \(peripheral)")
         let deviceName = "FitPay Wearable"
         let nameOfDeviceFound = (advertisementData as NSDictionary).objectForKey(CBAdvertisementDataLocalNameKey) as? NSString
         
         if (nameOfDeviceFound == deviceName) {
+            debugPrint("found \(deviceName) peripheral: \(peripheral)")
             self.statusLabel.stringValue = "Found FitPay Wearable, Connecting..."
             self.centralManager.stopScan();
             self.wearablePeripheral = peripheral
@@ -127,20 +148,24 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     func centralManager(central: CBCentralManager, didConnectPeripheral peripheral: CBPeripheral) {
+        debugPrint("connected to peripheral: \(peripheral)")
         self.statusLabel.stringValue = "Connected, Discovering Services..."
         peripheral.discoverServices(nil)
     }
     
     func centralManager(central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: NSError?) {
+        debugPrint("disconnected from peripheral: \(peripheral)")
         self.disableUi()
         self.statusLabel.stringValue = "Searching for FitPay Wearable"
         central.scanForPeripheralsWithServices(nil, options: nil)
     }
     
     func peripheral(peripheral: CBPeripheral, didDiscoverServices error: NSError?) {
+        debugPrint("discovered services from peripheral: \(peripheral), error: \(error)")
         for service in peripheral.services! {
             let thisService = service as CBService
             if thisService.UUID == PaymentServiceUUID {
+                debugPrint("peripheral has PaymentService: \(PaymentServiceUUID)");
                 self.statusLabel.stringValue = "FitPay Payment Service Found"
                 peripheral.discoverCharacteristics(nil, forService: thisService)
                 self.enableUi()
@@ -149,26 +174,34 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     func peripheral(peripheral: CBPeripheral, didDiscoverCharacteristicsForService service: CBService, error: NSError?) {
+        debugPrint("discovered characateristics for service: \(service.UUID), error: \(error)")
         for characteristic in service.characteristics! {
+            debugPrint("service has characteristic: \(characteristic)")
             let thisCharacteristic = characteristic as CBCharacteristic
+            debugPrint("cast as CBCharacteristic: \(thisCharacteristic), UUID: \(thisCharacteristic.UUID)")
+            debugPrint(" .. writable: \(thisCharacteristic.properties.rawValue & CBCharacteristicProperties.Write.rawValue)")
+            debugPrint(" .. writeWithoutResponse: \(thisCharacteristic.properties.rawValue & CBCharacteristicProperties.WriteWithoutResponse.rawValue)")
             if thisCharacteristic.UUID == ContinuationControlCharacteristic {
-                print("found continuation control characteristic")
+                print(" ... found continuation control characteristic")
                 self.continuationCharacteristicControl = thisCharacteristic
             } else if thisCharacteristic.UUID == ContinuationPacketCharacteristic {
-                print("found continuation packet characteristic")
+                print(" ... found continuation packet characteristic")
                 self.continuationCharacteristicPacket = thisCharacteristic
             } else if (thisCharacteristic.UUID == APDUControlCharacteristic) {
+                print(" ... found apdu control characteristic")
                 self.apduControlCharacteristic = thisCharacteristic
             } else if (thisCharacteristic.UUID == APDUResultCharacteristic) {
-                print("subscribing to apdu result notifications")
+                print(" ... found apdu result characteristic")
+                print(" ... subscribing to apdu result notifications")
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
             }
         }
     }
     
     func peripheral(peripheral: CBPeripheral, didUpdateValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        print("didUpdateValueForCharacteristic: \(characteristic)")
+        debugPrint("didUpdateValueForCharacteristic: \(characteristic.UUID), error: \(error)")
         if characteristic.UUID == APDUResultCharacteristic {
+            debugPrint("APDU Result characteristic update.   \(APDUResultCharacteristic)")
             let elapsedTime: Double = Double(NSDate.timeIntervalSinceReferenceDate() - startTime) * 1000
             let elapsedTimeStr: String = String(format: "%0.2f", elapsedTime)
             
@@ -199,12 +232,12 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     func peripheral(peripheral: CBPeripheral, didUpdateNotificationStateForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        print("didUpdateNotificationStateForCharacteristic: \(characteristic)")
+        debugPrint("didUpdateNotificationStateForCharacteristic: \(characteristic), error: \(error)")
     }
     
     
     func peripheral(peripheral: CBPeripheral, didWriteValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        print("write value: \(characteristic.UUID), error: \(error)")
+        print("didWriteValueForCharacteristic: \(characteristic.UUID), error: \(error)")
         if characteristic.UUID == ContinuationPacketCharacteristic {
             let d: Double = Double(Int(sentPackets++)) / Double(totalPackets) * 100
             print(d)
@@ -231,8 +264,9 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     func sendContinuation(dataToSend: NSData) {
+        debugPrint("sendContinuation: \(dataToSend)")
         let CONTINUATION_MTU: Int = MTU - 2
-        print("writing start control")
+        debugPrint("writing continuation control start to charactacteristic: \(continuationCharacteristicControl.UUID), value: \(hexString(START_CONTROL))")
         wearablePeripheral.writeValue(START_CONTROL, forCharacteristic: continuationCharacteristicControl, type: CBCharacteristicWriteType.WithResponse)
 
         var sendDataIndex: Int = 0
@@ -257,14 +291,28 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             continuationPacket.appendBytes(&pn16, length: sizeofValue(packetNumber))
             continuationPacket.appendData(chunk)
             
+            debugPrint("writing continuation packet to charactacteristic: \(continuationCharacteristicPacket.UUID), value: \(hexString(continuationPacket))")
             wearablePeripheral.writeValue(continuationPacket, forCharacteristic: continuationCharacteristicPacket, type: CBCharacteristicWriteType.WithResponse)
             
             sendDataIndex = sendDataIndex + amountToSend
             packetNumber++
         }
         
-        print("writing eom control")
-        wearablePeripheral.writeValue(EOM_CONTROL, forCharacteristic: continuationCharacteristicControl, type: CBCharacteristicWriteType.WithResponse)
+        print("preparing continuation eom control - calculate checksum on \(dataToSend)")
+        let crcValue = CRC32.init(data: dataToSend).hashValue
+        var crc32 = UInt32(bigEndian: UInt32(crcValue))
+
+        //let crcData = NSData(bytes: &crcValue, length: sizeof(Int))
+        debugPrint("apdu checksum is \(crcValue)")
+       // var iCrc = UInt32(crcValue)
+        let msg = NSMutableData()
+        msg.appendData(EOM_CONTROL)
+        msg.appendBytes(&crc32, length: sizeofValue(crc32))
+        //msg.appendData(crcData)
+        
+        debugPrint("writing continuation control end to charactacteristic: \(continuationCharacteristicControl.UUID), value: \(hexString(msg))")
+
+        wearablePeripheral.writeValue(msg, forCharacteristic: continuationCharacteristicControl, type: CBCharacteristicWriteType.WithResponse)
     }
     
     func dataFromHexString(value: NSString!) -> NSData? {
