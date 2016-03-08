@@ -14,6 +14,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     @IBOutlet weak var sequenceIdTextField: NSTextField!
     @IBOutlet weak var statusLabel: NSTextFieldCell!
+    @IBOutlet weak var paymentAmount: NSTextField!
     @IBOutlet weak var continuationLabel: NSTextField!
     @IBOutlet weak var txProgress: NSLevelIndicator!
     @IBOutlet weak var apduRequest: NSTextField!
@@ -22,7 +23,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     @IBOutlet weak var continuationStepper: NSStepper!
     
     @IBAction func sendApdu(sender: AnyObject) {
-        print("sending apdu:  \(apduRequest.stringValue)")
+        print("sending apdu:  \(apduRequest.stringValue) with sequenceId: \(sequenceId)")
         if (apduRequest.stringValue.characters.count % 2 != 0) {
             apduRequest.stringValue = apduRequest.stringValue + "0";
         }
@@ -93,12 +94,131 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     
     let PaymentServiceUUID = CBUUID(string: "d7cc1dc2-3603-4e71-bce6-e3b1551633e0")
+    
     let ContinuationControlCharacteristic = CBUUID(string: "cacc2825-0a2b-4cf2-a1a4-b9db27691382")
     let ContinuationPacketCharacteristic = CBUUID(string: "52d26993-6d10-4080-8166-35d11cf23c8c")
+    
     let APDUControlCharacteristic = CBUUID(string: "0761f49b-5f56-4008-b203-fd2406db8c20")
     let APDUResultCharacteristic = CBUUID(string: "840f2622-ff4a-4a56-91ab-b1e6dd977db4")
+    //TODO temp value for characteristic
+    let NotificationCharacteristic = CBUUID(string: "37051cf0-d70e-4b3c-9e90-0f8e9278b4d3")
     
     var startTime: NSTimeInterval = 0
+    
+    
+    struct Continuation {
+        var uuid : CBUUID
+        var data : [NSData]
+        init()  {
+            uuid = CBUUID()
+            data = [NSData]()
+        }
+        init(uuidValue: CBUUID) {
+            uuid = uuidValue
+            data = [NSData]()
+        }
+    }
+
+    
+    func getDataRange(withData data: NSData, withBob start: Int, withEnd end: Int) -> NSData {
+        let range : NSRange = NSMakeRange(start, end)
+        var buffer = [UInt8](count: end - start, repeatedValue: 0x00)
+        data.getBytes(&buffer, range: range)
+        
+        return NSData(bytes: buffer, length: end - start)
+    }
+
+    struct ContinuationPacketMessage {
+        let sortOrder: UInt16
+        let data: NSData
+        init(msg: NSData) {
+            let sortOrderRange : NSRange = NSMakeRange(0, 2)
+            var buffer = [UInt8](count: 2, repeatedValue: 0x00)
+            msg.getBytes(&buffer, range: sortOrderRange)
+            
+            let sortOrderData = NSData(bytes: buffer, length: 2)
+            var u16 : UInt16 = 0
+            sortOrderData.getBytes(&u16, length: 2)
+            sortOrder = UInt16(bigEndian: u16)
+            
+            let range : NSRange = NSMakeRange(2, msg.length - 2)
+            buffer = [UInt8](count: (msg.length) - 2, repeatedValue: 0x00)
+            msg.getBytes(&buffer, range: range)
+
+            data = NSData(bytes: buffer, length: (msg.length) - 2)
+        }
+    }
+
+    struct ContinuationControlMessage {
+        let type: UInt8
+        let isBeginning: Bool
+        let isEnd: Bool
+        let data: NSData
+        let uuid: CBUUID
+        let crc32: UInt32
+        init(msg: NSData) {
+            var buffer = [UInt8](count: (msg.length), repeatedValue: 0x00)
+            msg.getBytes(&buffer, length: buffer.count)
+
+            type = buffer[0]
+            if (buffer[0] == 0x00) {
+                isBeginning = true
+                isEnd = false
+            } else {
+                isBeginning = false
+                isEnd = true
+            }
+            
+            let range : NSRange = NSMakeRange(1, msg.length - 1)
+            buffer = [UInt8](count: (msg.length) - 1, repeatedValue: 0x00)
+            msg.getBytes(&buffer, range: range)
+            
+            data = NSData(bytes: buffer, length: (msg.length) - 1)
+            if (data.length == 16) {
+                uuid = CBUUID(data: data)
+                crc32 = UInt32()
+            } else if (data.length == 4) {
+                uuid = CBUUID()
+                var u32 : UInt32 = 0
+                data.getBytes(&u32, length: 4)
+                crc32 = UInt32(bigEndian: u32)
+            } else {
+                print("Continuation control data is not the correct length");
+                uuid = CBUUID()
+                crc32 = UInt32()
+            }
+
+        }
+    }
+    
+    struct ApduResultMessage {
+        let msg : NSData
+        let resultCode : UInt8
+        let sequenceId : UInt16
+        let responseCode: NSData
+        init(withMessage: NSData) {
+            msg = withMessage
+            var buffer = [UInt8](count: (withMessage.length), repeatedValue: 0x00)
+            withMessage.getBytes(&buffer, length: buffer.count)
+        
+            resultCode = UInt8(buffer[0])
+        
+            var recvSeqId:UInt16?
+            recvSeqId = UInt16(buffer[1]) << 8
+            recvSeqId = recvSeqId! | UInt16(buffer[2])
+            sequenceId = recvSeqId!
+            
+            let range : NSRange = NSMakeRange(withMessage.length - 2, 2)
+            buffer = [UInt8](count: 2, repeatedValue: 0x00)
+            msg.getBytes(&buffer, range: range)
+            responseCode = NSData(bytes: buffer, length: 2)
+        }
+
+    }
+
+    var continuation: Continuation = Continuation()
+    
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -181,18 +301,33 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             debugPrint("cast as CBCharacteristic: \(thisCharacteristic), UUID: \(thisCharacteristic.UUID)")
             debugPrint(" .. writable: \(thisCharacteristic.properties.rawValue & CBCharacteristicProperties.Write.rawValue)")
             debugPrint(" .. writeWithoutResponse: \(thisCharacteristic.properties.rawValue & CBCharacteristicProperties.WriteWithoutResponse.rawValue)")
+            debugPrint(" .. indicate: \(thisCharacteristic.properties.rawValue & CBCharacteristicProperties.Indicate.rawValue)")
             if thisCharacteristic.UUID == ContinuationControlCharacteristic {
                 print(" ... found continuation control characteristic")
                 self.continuationCharacteristicControl = thisCharacteristic
+                //TODO resolve impl detail - should the device always subscribe
+                // of subscribe only within context of an APDUControl
+                print(" ... subscribing to continuation control characteristic")
+                wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
             } else if thisCharacteristic.UUID == ContinuationPacketCharacteristic {
                 print(" ... found continuation packet characteristic")
                 self.continuationCharacteristicPacket = thisCharacteristic
+                //TODO resolve impl detail - should the device always subscribe
+                // of subscribe only within context of an APDUControl
+                print(" ... subscribing to continuation packet characteristic")
+                wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
             } else if (thisCharacteristic.UUID == APDUControlCharacteristic) {
                 print(" ... found apdu control characteristic")
                 self.apduControlCharacteristic = thisCharacteristic
             } else if (thisCharacteristic.UUID == APDUResultCharacteristic) {
                 print(" ... found apdu result characteristic")
                 print(" ... subscribing to apdu result notifications")
+                //TODO resolve impl detail - should the device always subscribe
+                // of subscribe only within context of an APDUControl
+                wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
+            } else if (thisCharacteristic.UUID == NotificationCharacteristic) {
+                print(" ... found transaction notification characteristic")
+                print(" ... subscribing to transaction notifications")
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
             }
         }
@@ -207,28 +342,63 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             
             print("raw apdu result [\(hexString(characteristic.value))]")
             
-            // probably not the best way to do this, i'm clueless in swift
-            // https://www.snip2code.com/Snippet/190882/Heart-Rate-Monitor-Example(Swift)
-            var buffer = [UInt8](count: (characteristic.value?.length)!, repeatedValue: 0x00)
-            characteristic.value?.getBytes(&buffer, length: buffer.count)
+            let apduResultMessage = ApduResultMessage(withMessage: characteristic.value!)
             
-            var resultCode:UInt8?
-            resultCode = UInt8(buffer[0])
+            postResult(apduResultMessage, elapsedTimeStr: elapsedTimeStr)
             
-            var recvSeqId:UInt16?
-            recvSeqId = UInt16(buffer[1]) << 8
-            recvSeqId = recvSeqId! | UInt16(buffer[2])
+        } else if characteristic.UUID == ContinuationControlCharacteristic {
+            debugPrint("Continuation control characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
             
-            self.apduResult.stringValue = "\(hexString(characteristic.value))"
-            self.continuationLabel.stringValue = "apdu result code \(resultCode!) received for sequenceId \(recvSeqId!), \(elapsedTimeStr)ms"
+            let continuationControlMessage = ContinuationControlMessage(msg: characteristic.value!)
+            if (continuationControlMessage.isBeginning) {
+                debugPrint("continuation control start")
+                if (continuation.uuid.UUIDString != CBUUID().UUIDString) {
+                    debugPrint("Previous continuation item exists")
+                }
+                continuation.uuid = continuationControlMessage.uuid
+                continuation.data.removeAll()
             
-            if self.autoincrementSequenceId.boolValue {
-                print("incrementing sequenceId")
-                sequenceIdTextField.stringValue = String(++self.sequenceId)
             } else {
-                print("skipping auto increment")
+                debugPrint("continuation control end")
+                //TODO need to verify all packets received - change data structure to dictionary
+                let completeResponse = NSMutableData()
+                for packet in continuation.data {
+                    completeResponse.appendData(packet)
+                }
+                debugPrint("complete response: \(hexString(completeResponse))")
+                let crc = CRC32.init(data: completeResponse).hashValue
+                let crc32 = UInt32(littleEndian: UInt32(crc))
+
+                if (crc32 != continuationControlMessage.crc32) {
+                    debugPrint("crcs are not equal.  expected: \(continuationControlMessage.crc32), calculated from continuation messages: \(crc32)")
+                    self.continuationLabel.stringValue = "Continuation CRC check failed.  expected: \(continuationControlMessage.crc32), calculated from continuation messages: \(crc32)"
+                    return;
+                }
+                let elapsedTime: Double = Double(NSDate.timeIntervalSinceReferenceDate() - startTime) * 1000
+                let elapsedTimeStr: String = String(format: "%0.2f", elapsedTime)
+                if (continuation.uuid.UUIDString == APDUResultCharacteristic.UUIDString) {
+                    let apduResultMessage = ApduResultMessage(withMessage: completeResponse)
+                    postResult(apduResultMessage, elapsedTimeStr: elapsedTimeStr)
+                } else {
+                    debugPrint("Do not know what to do with continuation for characteristic: \(continuation.uuid.UUIDString)")
+                }
+                // clear the continuation contents
+                continuation.uuid = CBUUID()
+                continuation.data.removeAll()
+                
             }
+
+        } else if characteristic.UUID == ContinuationPacketCharacteristic {
+            debugPrint("Continuation packet characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
+            let msg : ContinuationPacketMessage = ContinuationPacketMessage(msg: characteristic.value!)
+            debugPrint("continuation packet.  sortOrder: \(msg.sortOrder), data: \(hexString(msg.data))")
+            let pos = Int(msg.sortOrder);
+            continuation.data.insert(msg.data, atIndex: pos)
+        } else if characteristic.UUID == NotificationCharacteristic {
+            debugPrint("Transaction notification characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
+            self.continuationLabel.stringValue = "Received transaction notification:  \(hexString(characteristic.value))"
         }
+
     }
     
     func peripheral(peripheral: CBPeripheral, didUpdateNotificationStateForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
@@ -365,6 +535,20 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.apduRequest.enabled = true
         self.apduButton.enabled = true
         self.sequenceIdTextField.enabled = true
+    }
+    
+    func postResult(apduResultMessage: ApduResultMessage, elapsedTimeStr: String) {
+        
+        self.apduResult.stringValue = "\(hexString(apduResultMessage.msg))"
+        self.continuationLabel.stringValue = "apdu result code: \(apduResultMessage.resultCode), responseCode: \(apduResultMessage.responseCode) received for sequenceId: \(apduResultMessage.sequenceId), \(elapsedTimeStr)ms"
+        
+        if self.autoincrementSequenceId.boolValue {
+            sequenceIdTextField.stringValue = String(++self.sequenceId)
+            print("sequenceId incremented to: \(sequenceIdTextField.stringValue)")
+        } else {
+            print("skipping auto increment")
+        }
+
     }
 }
 
