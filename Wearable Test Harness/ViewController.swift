@@ -45,7 +45,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.apduResult.stringValue = ""
         
         if (withContinuation) {
-            sendContinuation(apduPacket)
+            sendApduContinuation(apduPacket)
             return
         }
         
@@ -69,7 +69,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         let stringValue = NSString(string: hexString)
         print("prepping to send: " + (stringValue as String))
         self.testButton.enabled = false
-        sendContinuation(NSData(bytes: randomBytes, length: bytesCount))
+        sendApduContinuation(NSData(bytes: randomBytes, length: bytesCount))
         self.testButton.enabled = true
     }
     
@@ -156,6 +156,14 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         let data: NSData
         let uuid: CBUUID
         let crc32: UInt32
+        init(withUuid: CBUUID) {
+            type = 0
+            isBeginning = true
+            isEnd = false
+            uuid = withUuid
+            data = NSData()
+            crc32 = UInt32()
+        }
         init(msg: NSData) {
             var buffer = [UInt8](count: (msg.length), repeatedValue: 0x00)
             msg.getBytes(&buffer, length: buffer.count)
@@ -175,7 +183,17 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             
             data = NSData(bytes: buffer, length: (msg.length) - 1)
             if (data.length == 16) {
-                uuid = CBUUID(data: data)
+                //reverse bytes for little endian representation
+                var inData = [UInt8](count: data.length, repeatedValue: 0)
+                data.getBytes(&inData, length: data.length)
+                var outData = [UInt8](count: data.length, repeatedValue: 0)
+                var outPos = inData.count;
+                for i in 0 ..< inData.count {
+                    outPos--
+                    outData[i] = inData[outPos]
+                }
+                let out = NSData(bytes: outData, length: outData.count)
+               uuid = CBUUID(data: out)
                 crc32 = UInt32()
             } else if (data.length == 4) {
                 uuid = CBUUID()
@@ -402,7 +420,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     func peripheral(peripheral: CBPeripheral, didUpdateNotificationStateForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        debugPrint("didUpdateNotificationStateForCharacteristic: \(characteristic), error: \(error)")
+        debugPrint("didUpdateNotificationStateForCharacteristic: \(characteristic.UUID), error: \(error)")
     }
     
     
@@ -433,11 +451,12 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         }
     }
     
-    func sendContinuation(dataToSend: NSData) {
+    func sendApduContinuation(dataToSend: NSData) {
         debugPrint("sendContinuation: \(dataToSend)")
         let CONTINUATION_MTU: Int = MTU - 2
-        debugPrint("writing continuation control start to charactacteristic: \(continuationCharacteristicControl.UUID), value: \(hexString(START_CONTROL))")
-        wearablePeripheral.writeValue(START_CONTROL, forCharacteristic: continuationCharacteristicControl, type: CBCharacteristicWriteType.WithResponse)
+        let startMsg = continutationControlMessage(APDUControlCharacteristic)
+        debugPrint("writing continuation control start to charactacteristic: \(continuationCharacteristicControl.UUID), value: \(hexString(startMsg))")
+        wearablePeripheral.writeValue(startMsg, forCharacteristic: continuationCharacteristicControl, type: CBCharacteristicWriteType.WithResponse)
 
         var sendDataIndex: Int = 0
 
@@ -483,6 +502,29 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         debugPrint("writing continuation control end to charactacteristic: \(continuationCharacteristicControl.UUID), value: \(hexString(msg))")
 
         wearablePeripheral.writeValue(msg, forCharacteristic: continuationCharacteristicControl, type: CBCharacteristicWriteType.WithResponse)
+    }
+    
+    func continutationControlMessage(withUuid: CBUUID) -> NSData {
+        let msg = NSMutableData()
+        msg.appendData(START_CONTROL)
+        // UUID is little endian
+        msg.appendData(reverseData(withUuid.data))
+
+        return msg
+    }
+    
+    // Reverse the endianess of the data
+    func reverseData(data: NSData) -> NSData {
+        var inData = [UInt8](count: data.length, repeatedValue: 0)
+        data.getBytes(&inData, length: data.length)
+        var outData = [UInt8](count: data.length, repeatedValue: 0)
+        var outPos = inData.count;
+        for i in 0 ..< inData.count {
+            outPos--
+            outData[i] = inData[outPos]
+        }
+        let out = NSData(bytes: outData, length: outData.count)
+        return out
     }
     
     func dataFromHexString(value: NSString!) -> NSData? {
