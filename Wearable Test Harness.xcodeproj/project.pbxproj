@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		9BAC4F931C8914DA00341CC7 /* CRC32.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BAC4F921C8914DA00341CC7 /* CRC32.swift */; };
+		9BDF75DB1C98CDEB00BDCE3E /* BleMessages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF75DA1C98CDEB00BDCE3E /* BleMessages.swift */; };
+		9BDF75DD1C98CF5900BDCE3E /* Conversions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF75DC1C98CF5900BDCE3E /* Conversions.swift */; };
+		9BDF75DF1C98D93B00BDCE3E /* DeviceInfoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF75DE1C98D93B00BDCE3E /* DeviceInfoViewController.swift */; };
+		9BDF75E31C99C8D200BDCE3E /* FitpayBleServiceConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BDF75E21C99C8D200BDCE3E /* FitpayBleServiceConstants.swift */; };
 		C5C98ED91C583E2B0021279D /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C98ED81C583E2B0021279D /* AppDelegate.swift */; };
 		C5C98EDB1C583E2B0021279D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C98EDA1C583E2B0021279D /* ViewController.swift */; };
 		C5C98EDD1C583E2B0021279D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C5C98EDC1C583E2B0021279D /* Assets.xcassets */; };
@@ -33,6 +37,10 @@
 
 /* Begin PBXFileReference section */
 		9BAC4F921C8914DA00341CC7 /* CRC32.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CRC32.swift; sourceTree = "<group>"; };
+		9BDF75DA1C98CDEB00BDCE3E /* BleMessages.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BleMessages.swift; sourceTree = "<group>"; };
+		9BDF75DC1C98CF5900BDCE3E /* Conversions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Conversions.swift; sourceTree = "<group>"; };
+		9BDF75DE1C98D93B00BDCE3E /* DeviceInfoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeviceInfoViewController.swift; sourceTree = "<group>"; };
+		9BDF75E21C99C8D200BDCE3E /* FitpayBleServiceConstants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FitpayBleServiceConstants.swift; sourceTree = "<group>"; };
 		C5C98ED51C583E2B0021279D /* Wearable Test Harness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Wearable Test Harness.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5C98ED81C583E2B0021279D /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C5C98EDA1C583E2B0021279D /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -91,10 +99,14 @@
 			children = (
 				C5C98ED81C583E2B0021279D /* AppDelegate.swift */,
 				C5C98EDA1C583E2B0021279D /* ViewController.swift */,
+				9BDF75DE1C98D93B00BDCE3E /* DeviceInfoViewController.swift */,
 				C5C98EDC1C583E2B0021279D /* Assets.xcassets */,
 				C5C98EDE1C583E2B0021279D /* Main.storyboard */,
 				C5C98EE11C583E2B0021279D /* Info.plist */,
 				9BAC4F921C8914DA00341CC7 /* CRC32.swift */,
+				9BDF75DA1C98CDEB00BDCE3E /* BleMessages.swift */,
+				9BDF75DC1C98CF5900BDCE3E /* Conversions.swift */,
+				9BDF75E21C99C8D200BDCE3E /* FitpayBleServiceConstants.swift */,
 			);
 			path = "Wearable Test Harness";
 			sourceTree = "<group>";
@@ -227,9 +239,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9BDF75DD1C98CF5900BDCE3E /* Conversions.swift in Sources */,
 				C5C98EDB1C583E2B0021279D /* ViewController.swift in Sources */,
+				9BDF75DF1C98D93B00BDCE3E /* DeviceInfoViewController.swift in Sources */,
+				9BDF75E31C99C8D200BDCE3E /* FitpayBleServiceConstants.swift in Sources */,
 				9BAC4F931C8914DA00341CC7 /* CRC32.swift in Sources */,
 				C5C98ED91C583E2B0021279D /* AppDelegate.swift in Sources */,
+				9BDF75DB1C98CDEB00BDCE3E /* BleMessages.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

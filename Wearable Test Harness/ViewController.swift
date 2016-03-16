@@ -12,6 +12,22 @@ import SecurityFoundation
 
 class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
     
+    let START_CONTROL: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
+    let EOM_CONTROL: NSData = NSData(bytes: [0x01] as [UInt8], length: 1)
+    let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
+    
+    let PaymentServiceUUID = CBUUID(string: FitpayServiceUUID.PaymentServiceUUID.rawValue)
+    
+    let ContinuationControlCharacteristic = CBUUID(string: FitpayCharacteristicUUID.ContinuationControlCharacteristic.rawValue)
+    let ContinuationPacketCharacteristic = CBUUID(string: FitpayCharacteristicUUID.ContinuationPacketCharacteristic.rawValue)
+    
+    let APDUControlCharacteristic = CBUUID(string: FitpayCharacteristicUUID.APDUControlCharacteristic.rawValue)
+    let APDUResultCharacteristic = CBUUID(string: FitpayCharacteristicUUID.APDUResultCharacteristic.rawValue)
+    let NotificationCharacteristicUUID = CBUUID(string: FitpayCharacteristicUUID.NotificationCharacteristic.rawValue)
+    let SecurityWriteCharacteristicUUID = CBUUID(string: FitpayCharacteristicUUID.SecurityWriteCharacteristic.rawValue)
+    let SecurityStateCharacteristicUUID = CBUUID(string: FitpayCharacteristicUUID.SecurityStateCharacteristic.rawValue)
+
+    
     @IBOutlet weak var sequenceIdTextField: NSTextField!
     @IBOutlet weak var statusLabel: NSTextFieldCell!
     @IBOutlet weak var paymentAmount: NSTextField!
@@ -20,7 +36,20 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     @IBOutlet weak var apduRequest: NSTextField!
     @IBOutlet weak var apduResult: NSTextField!
     @IBOutlet weak var apduButton: NSButton!
+    @IBOutlet weak var testButton: NSButton!
     @IBOutlet weak var continuationStepper: NSStepper!
+    
+    @IBOutlet weak var sendNotification: NSButton!
+    @IBOutlet weak var notificationData: NSTextField!
+    @IBOutlet weak var receivedNotificationData: NSTextField!
+    
+    @IBOutlet weak var securityWriteData: NSTextField!
+    @IBOutlet weak var securityWriteButton: NSButton!
+    @IBOutlet weak var securityState: NSTextField!
+    
+    @IBOutlet weak var pairingDeviceName: NSTextField!
+    
+    //MARK: Actions
     
     @IBAction func sendApdu(sender: AnyObject) {
         print("sending apdu:  \(apduRequest.stringValue) with sequenceId: \(sequenceId)")
@@ -72,8 +101,34 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         sendApduContinuation(NSData(bytes: randomBytes, length: bytesCount))
         self.testButton.enabled = true
     }
+
+    @IBAction func sendNotification(sender: NSButton) {
+        self.continuationLabel.stringValue = "sending notification to device"
+        debugPrint("sendNotification is not implemented")
+    }
+
     
-    @IBOutlet weak var testButton: NSButton!
+    @IBAction func sendSecurityWrite(sender: NSButton) {
+        if (securityWriteCharacteristic == nil) {
+            self.continuationLabel.stringValue = "security write characteristic is not available on this service"
+            return
+        }
+
+        self.continuationLabel.stringValue = "sending security update to toggle nfc device"
+        debugPrint("current security state: \(hexString(securityStateCharacteristic.value))")
+        var isNfcEnabled: Bool = false;
+        if (securityStateCharacteristic.value != nil) {
+            let currentState = SecurityStateMessage(withMessage: securityStateCharacteristic.value!)
+            isNfcEnabled = currentState.isNfcEnabled
+        }
+        let msg = SecurityWriteMessage.init(withEnabled: !isNfcEnabled).msg
+        debugPrint("... write security write update: \(msg) to characteristic: \(securityWriteCharacteristic.UUID), length: \(msg.length)")
+        if ((securityWriteCharacteristic) != nil) {
+            wearablePeripheral.writeValue(msg, forCharacteristic: securityWriteCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+        } else {
+            self.continuationLabel.stringValue = "security write characteristic is not available on this service"
+        }
+    }
     
     var centralManager : CBCentralManager!
     var wearablePeripheral : CBPeripheral!
@@ -85,40 +140,19 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     var totalPackets: Int = 0
     var sentPackets: Int = 0
     let MTU: Int = 20
+    
     var continuationCharacteristicControl: CBCharacteristic!
     var continuationCharacteristicPacket: CBCharacteristic!
     var apduControlCharacteristic: CBCharacteristic!
+    var securityWriteCharacteristic: CBCharacteristic!
+    var securityStateCharacteristic: CBCharacteristic!
+    var notificationCharacteristic: CBCharacteristic!
     
-    let START_CONTROL: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
-    let EOM_CONTROL: NSData = NSData(bytes: [0x01] as [UInt8], length: 1)
-    let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
-    
-    let PaymentServiceUUID = CBUUID(string: "d7cc1dc2-3603-4e71-bce6-e3b1551633e0")
-    
-    let ContinuationControlCharacteristic = CBUUID(string: "cacc2825-0a2b-4cf2-a1a4-b9db27691382")
-    let ContinuationPacketCharacteristic = CBUUID(string: "52d26993-6d10-4080-8166-35d11cf23c8c")
-    
-    let APDUControlCharacteristic = CBUUID(string: "0761f49b-5f56-4008-b203-fd2406db8c20")
-    let APDUResultCharacteristic = CBUUID(string: "840f2622-ff4a-4a56-91ab-b1e6dd977db4")
-    //TODO temp value for characteristic
-    let NotificationCharacteristic = CBUUID(string: "37051cf0-d70e-4b3c-9e90-0f8e9278b4d3")
     
     var startTime: NSTimeInterval = 0
     
     
-    struct Continuation {
-        var uuid : CBUUID
-        var data : [NSData]
-        init()  {
-            uuid = CBUUID()
-            data = [NSData]()
-        }
-        init(uuidValue: CBUUID) {
-            uuid = uuidValue
-            data = [NSData]()
-        }
-    }
-
+   
     
     func getDataRange(withData data: NSData, withBob start: Int, withEnd end: Int) -> NSData {
         let range : NSRange = NSMakeRange(start, end)
@@ -126,112 +160,6 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         data.getBytes(&buffer, range: range)
         
         return NSData(bytes: buffer, length: end - start)
-    }
-
-    struct ContinuationPacketMessage {
-        let sortOrder: UInt16
-        let data: NSData
-        init(msg: NSData) {
-            let sortOrderRange : NSRange = NSMakeRange(0, 2)
-            var buffer = [UInt8](count: 2, repeatedValue: 0x00)
-            msg.getBytes(&buffer, range: sortOrderRange)
-            
-            let sortOrderData = NSData(bytes: buffer, length: 2)
-            var u16 : UInt16 = 0
-            sortOrderData.getBytes(&u16, length: 2)
-            sortOrder = UInt16(bigEndian: u16)
-            
-            let range : NSRange = NSMakeRange(2, msg.length - 2)
-            buffer = [UInt8](count: (msg.length) - 2, repeatedValue: 0x00)
-            msg.getBytes(&buffer, range: range)
-
-            data = NSData(bytes: buffer, length: (msg.length) - 2)
-        }
-    }
-
-    struct ContinuationControlMessage {
-        let type: UInt8
-        let isBeginning: Bool
-        let isEnd: Bool
-        let data: NSData
-        let uuid: CBUUID
-        let crc32: UInt32
-        init(withUuid: CBUUID) {
-            type = 0
-            isBeginning = true
-            isEnd = false
-            uuid = withUuid
-            data = NSData()
-            crc32 = UInt32()
-        }
-        init(msg: NSData) {
-            var buffer = [UInt8](count: (msg.length), repeatedValue: 0x00)
-            msg.getBytes(&buffer, length: buffer.count)
-
-            type = buffer[0]
-            if (buffer[0] == 0x00) {
-                isBeginning = true
-                isEnd = false
-            } else {
-                isBeginning = false
-                isEnd = true
-            }
-            
-            let range : NSRange = NSMakeRange(1, msg.length - 1)
-            buffer = [UInt8](count: (msg.length) - 1, repeatedValue: 0x00)
-            msg.getBytes(&buffer, range: range)
-            
-            data = NSData(bytes: buffer, length: (msg.length) - 1)
-            if (data.length == 16) {
-                //reverse bytes for little endian representation
-                var inData = [UInt8](count: data.length, repeatedValue: 0)
-                data.getBytes(&inData, length: data.length)
-                var outData = [UInt8](count: data.length, repeatedValue: 0)
-                var outPos = inData.count;
-                for i in 0 ..< inData.count {
-                    outPos--
-                    outData[i] = inData[outPos]
-                }
-                let out = NSData(bytes: outData, length: outData.count)
-               uuid = CBUUID(data: out)
-                crc32 = UInt32()
-            } else if (data.length == 4) {
-                uuid = CBUUID()
-                var u32 : UInt32 = 0
-                data.getBytes(&u32, length: 4)
-                crc32 = UInt32(bigEndian: u32)
-            } else {
-                print("Continuation control data is not the correct length");
-                uuid = CBUUID()
-                crc32 = UInt32()
-            }
-
-        }
-    }
-    
-    struct ApduResultMessage {
-        let msg : NSData
-        let resultCode : UInt8
-        let sequenceId : UInt16
-        let responseCode: NSData
-        init(withMessage: NSData) {
-            msg = withMessage
-            var buffer = [UInt8](count: (withMessage.length), repeatedValue: 0x00)
-            withMessage.getBytes(&buffer, length: buffer.count)
-        
-            resultCode = UInt8(buffer[0])
-        
-            var recvSeqId:UInt16?
-            recvSeqId = UInt16(buffer[1]) << 8
-            recvSeqId = recvSeqId! | UInt16(buffer[2])
-            sequenceId = recvSeqId!
-            
-            let range : NSRange = NSMakeRange(withMessage.length - 2, 2)
-            buffer = [UInt8](count: 2, repeatedValue: 0x00)
-            msg.getBytes(&buffer, range: range)
-            responseCode = NSData(bytes: buffer, length: 2)
-        }
-
     }
 
     var continuation: Continuation = Continuation()
@@ -247,6 +175,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.apduRequest.stringValue = "FF"
         self.statusLabel.stringValue = ""
         self.continuationLabel.stringValue = ""
+        self.pairingDeviceName.stringValue = "FitPay Wearable"
         self.disableUi()
         
         self.txProgress.doubleValue = 0.0
@@ -260,9 +189,9 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
 
     func centralManagerDidUpdateState(central: CBCentralManager) {
-        debugPrint("centralManagerDidUpdateState invoked")
+        debugPrint("centralManagerDidUpdateState invoked.  \(central.state)")
         if central.state == CBCentralManagerState.PoweredOn {
-            self.statusLabel.stringValue = "Searching for FitPay Wearable"
+            self.statusLabel.stringValue = "Searching for \(self.pairingDeviceName.stringValue)"
             central.scanForPeripheralsWithServices(nil, options: nil)
         } else {
             self.statusLabel.stringValue = "Bluetooth not available"
@@ -271,12 +200,11 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     func centralManager(central: CBCentralManager, didDiscoverPeripheral peripheral: CBPeripheral, advertisementData: [String : AnyObject], RSSI: NSNumber) {
         //debugPrint("discovered peripheral: + \(peripheral)")
-        let deviceName = "FitPay Wearable"
         let nameOfDeviceFound = (advertisementData as NSDictionary).objectForKey(CBAdvertisementDataLocalNameKey) as? NSString
         
-        if (nameOfDeviceFound == deviceName) {
-            debugPrint("found \(deviceName) peripheral: \(peripheral)")
-            self.statusLabel.stringValue = "Found FitPay Wearable, Connecting..."
+        if (nameOfDeviceFound == self.pairingDeviceName.stringValue) {
+            debugPrint("found device: \(self.pairingDeviceName.stringValue), peripheral: \(peripheral)")
+            self.statusLabel.stringValue = "Found \(self.pairingDeviceName.stringValue), Connecting..."
             self.centralManager.stopScan();
             self.wearablePeripheral = peripheral
             self.wearablePeripheral.delegate = self
@@ -294,7 +222,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     func centralManager(central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: NSError?) {
         debugPrint("disconnected from peripheral: \(peripheral)")
         self.disableUi()
-        self.statusLabel.stringValue = "Searching for FitPay Wearable"
+        self.statusLabel.stringValue = "Searching for \(self.pairingDeviceName.stringValue)"
         central.scanForPeripheralsWithServices(nil, options: nil)
     }
     
@@ -343,9 +271,18 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
                 //TODO resolve impl detail - should the device always subscribe
                 // of subscribe only within context of an APDUControl
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
-            } else if (thisCharacteristic.UUID == NotificationCharacteristic) {
+            } else if (thisCharacteristic.UUID == NotificationCharacteristicUUID) {
                 print(" ... found transaction notification characteristic")
+                self.notificationCharacteristic = thisCharacteristic
                 print(" ... subscribing to transaction notifications")
+                wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
+            } else if (thisCharacteristic.UUID == SecurityWriteCharacteristicUUID) {
+                print(" ... found security write characteristic")
+                self.securityWriteCharacteristic = thisCharacteristic
+            } else if (thisCharacteristic.UUID == SecurityStateCharacteristicUUID) {
+                print(" ... found security state characteristic")
+                self.securityStateCharacteristic = thisCharacteristic
+                print(" ... subscribing to security state notifications")
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
             }
         }
@@ -412,9 +349,14 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             debugPrint("continuation packet.  sortOrder: \(msg.sortOrder), data: \(hexString(msg.data))")
             let pos = Int(msg.sortOrder);
             continuation.data.insert(msg.data, atIndex: pos)
-        } else if characteristic.UUID == NotificationCharacteristic {
+        } else if characteristic.UUID == NotificationCharacteristicUUID {
             debugPrint("Transaction notification characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
             self.continuationLabel.stringValue = "Received transaction notification:  \(hexString(characteristic.value))"
+            self.receivedNotificationData.stringValue = "\(hexString(characteristic.value))"
+        } else if characteristic.UUID == SecurityStateCharacteristicUUID {
+            debugPrint("Security state characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
+            self.continuationLabel.stringValue = "Received security state update:  \(hexString(characteristic.value))"
+            self.securityState.stringValue = "\(hexString(characteristic.value))"
         }
 
     }
@@ -513,63 +455,15 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         return msg
     }
     
-    // Reverse the endianess of the data
-    func reverseData(data: NSData) -> NSData {
-        var inData = [UInt8](count: data.length, repeatedValue: 0)
-        data.getBytes(&inData, length: data.length)
-        var outData = [UInt8](count: data.length, repeatedValue: 0)
-        var outPos = inData.count;
-        for i in 0 ..< inData.count {
-            outPos--
-            outData[i] = inData[outPos]
-        }
-        let out = NSData(bytes: outData, length: outData.count)
-        return out
-    }
-    
-    func dataFromHexString(value: NSString!) -> NSData? {
-        let trimmedString = value.stringByTrimmingCharactersInSet(NSCharacterSet(charactersInString: "<> ")).stringByReplacingOccurrencesOfString(" ", withString: "")
-        
-        let regex = try! NSRegularExpression(pattern: "^[0-9a-f]*$", options: .CaseInsensitive)
-        
-        let found = regex.firstMatchInString(trimmedString, options: [], range: NSMakeRange(0, trimmedString.characters.count))
-        
-        if found == nil || found?.range.location == NSNotFound || trimmedString.characters.count % 2 != 0 {
-            return nil
-        }
-        
-        let data = NSMutableData(capacity: trimmedString.characters.count / 2)
-        
-        for var index = trimmedString.startIndex; index < trimmedString.endIndex; index = index.successor().successor() {
-            let byteString = trimmedString.substringWithRange(Range<String.Index>(start: index, end: index.successor().successor()))
-            let num = UInt8(byteString.withCString { strtoul($0, nil, 16) })
-            data?.appendBytes([num] as [UInt8], length: 1)
-        }
-        
-        return data
-    }
-    
-    func hexString(value: NSData!) -> String {
-        var s = ""
-        
-        if value == nil {
-            return s
-        }
-        
-        var byte: UInt8 = 0
-        for i in 0 ..< value.length {
-            value.getBytes(&byte, range: NSMakeRange(i, 1))
-            s += String(format: "%02x", byte)
-        }
-        
-        return s
-    }
     
     func disableUi() {
         self.testButton.enabled = false
         self.apduRequest.enabled = false
         self.apduButton.enabled = false
         self.sequenceIdTextField.enabled = false
+        self.securityWriteButton.enabled = false
+        self.sendNotification.enabled = false
+
     }
     
     func enableUi() {
@@ -577,6 +471,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.apduRequest.enabled = true
         self.apduButton.enabled = true
         self.sequenceIdTextField.enabled = true
+        self.securityWriteButton.enabled = true
+        self.sendNotification.enabled = true
     }
     
     func postResult(apduResultMessage: ApduResultMessage, elapsedTimeStr: String) {
@@ -592,5 +488,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         }
 
     }
+    
+    // MARK: Action
 }
 
