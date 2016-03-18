@@ -10,22 +10,48 @@ import Cocoa
 import CoreBluetooth
 import SecurityFoundation
 
-class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDelegate {
+class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDelegate, NSTableViewDataSource, NSTableViewDelegate {
     
     let START_CONTROL: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     let EOM_CONTROL: NSData = NSData(bytes: [0x01] as [UInt8], length: 1)
     let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     
+    let ContinuationControlCharacteristic = CBUUID(string: FitpayPaymentCharacteristicUUID.ContinuationControlCharacteristic.rawValue)
+    let ContinuationPacketCharacteristic = CBUUID(string: FitpayPaymentCharacteristicUUID.ContinuationPacketCharacteristic.rawValue)
+    
+    let APDUControlCharacteristic = CBUUID(string: FitpayPaymentCharacteristicUUID.APDUControlCharacteristic.rawValue)
+    let APDUResultCharacteristic = CBUUID(string: FitpayPaymentCharacteristicUUID.APDUResultCharacteristic.rawValue)
+    let SecureElementIdCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.SecureElementIdCharacteristic.rawValue)
+    let NotificationCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.NotificationCharacteristic.rawValue)
+    let SecurityWriteCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.SecurityWriteCharacteristic.rawValue)
+    let SecurityStateCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.SecurityStateCharacteristic.rawValue)
+
     let PaymentServiceUUID = CBUUID(string: FitpayServiceUUID.PaymentServiceUUID.rawValue)
+    let DeviceInfoServiceUUID = CBUUID(string: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue)
+
+    // Note: currently does not support a characteristic being provided by two or more services
+    var paymentServiceCharacteristicArray : [CharacteristicInfo] = [
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "APDU Control", withUUID: FitpayPaymentCharacteristicUUID.APDUControlCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "APDU Result", withUUID: FitpayPaymentCharacteristicUUID.APDUResultCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Continuation Control", withUUID: FitpayPaymentCharacteristicUUID.ContinuationControlCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Contnuation Packet", withUUID: FitpayPaymentCharacteristicUUID.ContinuationPacketCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue , withName: "Secure Element ID", withUUID: FitpayPaymentCharacteristicUUID.SecureElementIdCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Notification", withUUID: FitpayPaymentCharacteristicUUID.NotificationCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Security Write", withUUID: FitpayPaymentCharacteristicUUID.SecurityWriteCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Security State", withUUID: FitpayPaymentCharacteristicUUID.SecurityStateCharacteristic.rawValue)
+        ]
     
-    let ContinuationControlCharacteristic = CBUUID(string: FitpayCharacteristicUUID.ContinuationControlCharacteristic.rawValue)
-    let ContinuationPacketCharacteristic = CBUUID(string: FitpayCharacteristicUUID.ContinuationPacketCharacteristic.rawValue)
-    
-    let APDUControlCharacteristic = CBUUID(string: FitpayCharacteristicUUID.APDUControlCharacteristic.rawValue)
-    let APDUResultCharacteristic = CBUUID(string: FitpayCharacteristicUUID.APDUResultCharacteristic.rawValue)
-    let NotificationCharacteristicUUID = CBUUID(string: FitpayCharacteristicUUID.NotificationCharacteristic.rawValue)
-    let SecurityWriteCharacteristicUUID = CBUUID(string: FitpayCharacteristicUUID.SecurityWriteCharacteristic.rawValue)
-    let SecurityStateCharacteristicUUID = CBUUID(string: FitpayCharacteristicUUID.SecurityStateCharacteristic.rawValue)
+    var deviceInfoServiceCharacteristicArray: [CharacteristicInfo] = [
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue, withName: "Manufacturer Name", withUUID: FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_MANUFACTURER_NAME_STRING.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue, withName: "Model Number", withUUID: FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_MODEL_NUMBER_STRING.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue, withName: "Serial Number", withUUID: FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SERIAL_NUMBER_STRING.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue, withName: "Firmware Revision", withUUID: FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_FIRMWARE_REVISION_STRING.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue, withName: "Hardware Revision", withUUID: FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_HARDWARE_REVISION_STRING.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue, withName: "Software Revision", withUUID: FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SOFTWARE_REVISION_STRING.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue, withName: "System ID", withUUID: FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SYSTEM_ID.rawValue)
+    ]
+
+    var characteristicArray  = [CharacteristicInfo]()
 
     
     @IBOutlet weak var sequenceIdTextField: NSTextField!
@@ -48,6 +74,11 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     @IBOutlet weak var securityState: NSTextField!
     
     @IBOutlet weak var pairingDeviceName: NSTextField!
+    
+    @IBOutlet weak var characteristicTableView: NSTableView!
+
+    @IBOutlet weak var viewPaymentServiceButton: NSButton!
+    @IBOutlet weak var viewDeviceInfoServiceButton: NSButton!
     
     //MARK: Actions
     
@@ -130,6 +161,21 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         }
     }
     
+    
+    @IBAction func serviceViewSelected(sender: NSButton) {
+        debugPrint("service view selected: \(sender.title)")
+        if (sender == viewPaymentServiceButton) {
+            debugPrint("view payment service")
+            displayServiceUUID = FitpayServiceUUID.PaymentServiceUUID.rawValue;
+        }
+        if (sender == viewDeviceInfoServiceButton) {
+            debugPrint("view device info service")
+            displayServiceUUID = FitpayServiceUUID.DeviceInfoServiceUUID.rawValue;
+        }
+        doCharacteristicRead()
+        //characteristicTableView.reloadData();
+    }
+    
     var centralManager : CBCentralManager!
     var wearablePeripheral : CBPeripheral!
     var continuationValue: Int = 1
@@ -148,10 +194,9 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     var securityStateCharacteristic: CBCharacteristic!
     var notificationCharacteristic: CBCharacteristic!
     
-    
     var startTime: NSTimeInterval = 0
     
-    
+    var displayServiceUUID = ""
    
     
     func getDataRange(withData data: NSData, withBob start: Int, withEnd end: Int) -> NSData {
@@ -180,7 +225,20 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         
         self.txProgress.doubleValue = 0.0
         self.txProgress.displayIfNeeded()
+        
+        characteristicArray = paymentServiceCharacteristicArray + deviceInfoServiceCharacteristicArray
+        
+        characteristicTableView.setDataSource(self)
+        characteristicTableView.setDelegate(self)
+
     }
+    
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        debugPrint("ViewController view did appear")
+        characteristicTableView.reloadData();
+    }
+
 
     override var representedObject: AnyObject? {
         didSet {
@@ -233,21 +291,40 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             if thisService.UUID == PaymentServiceUUID {
                 debugPrint("peripheral has PaymentService: \(PaymentServiceUUID)");
                 self.statusLabel.stringValue = "FitPay Payment Service Found"
+                viewPaymentServiceButton.enabled = true
+                displayServiceUUID = thisService.UUID.UUIDString
+                viewPaymentServiceButton.state = NSOnState;
                 peripheral.discoverCharacteristics(nil, forService: thisService)
                 self.enableUi()
+            } else if thisService.UUID == DeviceInfoServiceUUID {
+                debugPrint("peripheral has DeviceInfoService: \(thisService.UUID)");
+                self.statusLabel.stringValue = "Device Info Service Found"
+                viewDeviceInfoServiceButton.enabled = true;
+                displayServiceUUID = thisService.UUID.UUIDString
+                if (viewPaymentServiceButton.state != NSOnState) {
+                    viewDeviceInfoServiceButton.state = NSOnState;
+                }
+                peripheral.discoverCharacteristics(nil, forService: thisService)
             }
+
         }
     }
     
     func peripheral(peripheral: CBPeripheral, didDiscoverCharacteristicsForService service: CBService, error: NSError?) {
         debugPrint("discovered characateristics for service: \(service.UUID), error: \(error)")
         for characteristic in service.characteristics! {
-            debugPrint("service has characteristic: \(characteristic)")
             let thisCharacteristic = characteristic as CBCharacteristic
-            debugPrint("cast as CBCharacteristic: \(thisCharacteristic), UUID: \(thisCharacteristic.UUID)")
-            debugPrint(" .. writable: \(thisCharacteristic.properties.rawValue & CBCharacteristicProperties.Write.rawValue)")
-            debugPrint(" .. writeWithoutResponse: \(thisCharacteristic.properties.rawValue & CBCharacteristicProperties.WriteWithoutResponse.rawValue)")
-            debugPrint(" .. indicate: \(thisCharacteristic.properties.rawValue & CBCharacteristicProperties.Indicate.rawValue)")
+            let thisUUID = coerceUUIDStringNameToRealUUID(thisCharacteristic.UUID.UUIDString)
+            debugPrint("found characteristic: \(thisCharacteristic), UUID: \(thisUUID)")
+            let characterisiticInfo = getCharacteristicInfo(thisUUID)
+            if (characterisiticInfo != nil) {
+                let permissions = getPermissionsString(thisCharacteristic)
+                debugPrint(" .. permissions: \(permissions)")
+                characterisiticInfo?.permissions = permissions
+                characterisiticInfo?.characteristic = thisCharacteristic
+            } else {
+                debugPrint("could not find characteristicInfo for: \(thisUUID)")
+            }
             if thisCharacteristic.UUID == ContinuationControlCharacteristic {
                 print(" ... found continuation control characteristic")
                 self.continuationCharacteristicControl = thisCharacteristic
@@ -271,6 +348,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
                 //TODO resolve impl detail - should the device always subscribe
                 // of subscribe only within context of an APDUControl
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
+            } else if (thisCharacteristic.UUID == SecureElementIdCharacteristicUUID) {
+                print(" ... found secure element id characteristic")
             } else if (thisCharacteristic.UUID == NotificationCharacteristicUUID) {
                 print(" ... found transaction notification characteristic")
                 self.notificationCharacteristic = thisCharacteristic
@@ -286,10 +365,41 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
             }
         }
+        doCharacteristicRead()
+        characteristicTableView.reloadData();
+    }
+    
+    func coerceUUIDStringNameToRealUUID(uuid : String) -> String {
+        if (uuid == "Manufacturer Name String") {
+            return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_MANUFACTURER_NAME_STRING.rawValue
+        }
+        if (uuid == "Model Number String") {
+            return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_MODEL_NUMBER_STRING.rawValue
+        }
+        if (uuid == "Serial Number String") {
+            return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SERIAL_NUMBER_STRING.rawValue
+        }
+        if (uuid == "Firmware Revision String") {
+            return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_FIRMWARE_REVISION_STRING.rawValue
+        }
+        if (uuid == "Hardware Revision String") {
+            return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_HARDWARE_REVISION_STRING.rawValue
+        }
+        if (uuid == "Software Revision String") {
+            return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SOFTWARE_REVISION_STRING.rawValue
+        }
+        if (uuid == "System ID") {
+            return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SYSTEM_ID.rawValue
+        }
+        return uuid
     }
     
     func peripheral(peripheral: CBPeripheral, didUpdateValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
         debugPrint("didUpdateValueForCharacteristic: \(characteristic.UUID), error: \(error)")
+        
+        // update display
+        updateViewForCharacteristicUpdate(characteristic)
+        
         if characteristic.UUID == APDUResultCharacteristic {
             debugPrint("APDU Result characteristic update.   \(APDUResultCharacteristic)")
             let elapsedTime: Double = Double(NSDate.timeIntervalSinceReferenceDate() - startTime) * 1000
@@ -297,14 +407,24 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             
             print("raw apdu result [\(hexString(characteristic.value))]")
             
-            let apduResultMessage = ApduResultMessage(withMessage: characteristic.value!)
+            var val = characteristic.value
+            if (val == nil || val?.length == 0) {
+                val = NSData()
+            }
+            
+            let apduResultMessage = ApduResultMessage(withMessage: val!)
             
             postResult(apduResultMessage, elapsedTimeStr: elapsedTimeStr)
             
         } else if characteristic.UUID == ContinuationControlCharacteristic {
             debugPrint("Continuation control characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
             
-            let continuationControlMessage = ContinuationControlMessage(msg: characteristic.value!)
+            var val = characteristic.value
+            if (val == nil || val?.length == 0) {
+                val = NSData()
+            }
+            
+            let continuationControlMessage = ContinuationControlMessage(msg: val!)
             if (continuationControlMessage.isBeginning) {
                 debugPrint("continuation control start")
                 if (continuation.uuid.UUIDString != CBUUID().UUIDString) {
@@ -345,7 +465,11 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
 
         } else if characteristic.UUID == ContinuationPacketCharacteristic {
             debugPrint("Continuation packet characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
-            let msg : ContinuationPacketMessage = ContinuationPacketMessage(msg: characteristic.value!)
+            var val = characteristic.value
+            if (val == nil || val?.length == 0) {
+                val = NSData()
+            }
+            let msg : ContinuationPacketMessage = ContinuationPacketMessage(msg: val!)
             debugPrint("continuation packet.  sortOrder: \(msg.sortOrder), data: \(hexString(msg.data))")
             let pos = Int(msg.sortOrder);
             continuation.data.insert(msg.data, atIndex: pos)
@@ -489,6 +613,132 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
 
     }
     
-    // MARK: Action
+    func getPermissionsString(characteristic : CBCharacteristic) -> String {
+        var value = ""
+        let permissions : [CBCharacteristicProperties] = [
+            CBCharacteristicProperties.Read,
+            CBCharacteristicProperties.Write,
+            CBCharacteristicProperties.WriteWithoutResponse,
+            CBCharacteristicProperties.Indicate,
+            CBCharacteristicProperties.IndicateEncryptionRequired,
+            CBCharacteristicProperties.Notify,
+            CBCharacteristicProperties.NotifyEncryptionRequired
+        ]
+        let values : [String] = ["R", "W", "WN", "I", "IE", "N", "NE"]
+        var i = 0
+        for permission in permissions {
+            if ((characteristic.properties.rawValue & permission.rawValue) > 0) {
+                if (value.characters.count > 0) {
+                    value += "|"
+                }
+                value += values[i]
+            }
+            i++
+        }
+        return value
+    }
+    
+    func getCharacteristicInfo(uuid: String) -> CharacteristicInfo? {
+        for characteristicInfo in characteristicArray {
+            if (characteristicInfo.uuid.lowercaseString == uuid.lowercaseString) {
+                return characteristicInfo
+            }
+        }
+        return nil
+    }
+    
+    func doCharacteristicRead() {
+        for characteristicInfo in characteristicArray {
+            if (characteristicInfo.characteristic != nil) {
+                if (isCharacteristicReadable(characteristicInfo.characteristic!)) {
+                    debugPrint("Reading value for characteristic: \(characteristicInfo.characteristic!.UUID)")
+                    wearablePeripheral.readValueForCharacteristic(characteristicInfo.characteristic!)
+                }
+            }
+        }
+    }
+    
+    func isCharacteristicReadable(characteristic: CBCharacteristic) -> Bool {
+        if ((characteristic.properties.rawValue & CBCharacteristicProperties.Read.rawValue) > 0) {
+            return true
+        }
+        return false
+    }
+    
+    func updateViewForCharacteristicUpdate(characteristic: CBCharacteristic) {
+        let info = getCharacteristicInfo(characteristic.UUID.UUIDString)
+        if (info != nil) {
+            info!.characteristic = characteristic
+        }
+        characteristicTableView.reloadData();
+    }
+
+    
+    // NSTableViewDataSource, NSTableViewDelegate Impl
+    
+    
+    func numberOfRowsInTableView(tableView: NSTableView) -> Int {
+        debugPrint("numberOfRowsInTableView called for displayServiceUUID: \(displayServiceUUID)")
+        var numberRows = 0
+        if (displayServiceUUID.lowercaseString == FitpayServiceUUID.PaymentServiceUUID.rawValue.lowercaseString) {
+            numberRows = paymentServiceCharacteristicArray.count
+        } else if (displayServiceUUID.lowercaseString == FitpayServiceUUID.DeviceInfoServiceUUID.rawValue.lowercaseString) {
+            numberRows = deviceInfoServiceCharacteristicArray.count
+        }
+        debugPrint("Number of rows in displayServiceUUID: \(numberRows)")
+        return numberRows
+    }
+    
+    func tableView(tableView: NSTableView,
+        viewForTableColumn tableColumn: NSTableColumn?,
+        row: Int) -> NSView? {
+            var charArray = [CharacteristicInfo]()
+            if (displayServiceUUID.lowercaseString == FitpayServiceUUID.PaymentServiceUUID.rawValue.lowercaseString) {
+                charArray = paymentServiceCharacteristicArray
+            } else if (displayServiceUUID.lowercaseString == FitpayServiceUUID.DeviceInfoServiceUUID.rawValue.lowercaseString) {
+                charArray = deviceInfoServiceCharacteristicArray
+            }
+
+            //debugPrint("view for table column: \(tableColumn?.identifier), row: \(row)")
+            
+            var text:String = ""
+            var cellIdentifier: String = ""
+            
+            if (row > (charArray.count - 1)) {
+                debugPrint("index out of range for row \(row), displayServiceUUID: \(displayServiceUUID)")
+                return nil
+            }
+            
+            let item = charArray[row]
+            
+            if tableColumn == tableView.tableColumns[0] {
+                text = item.name
+                cellIdentifier = "characteristicNameID"
+            } else if tableColumn == tableView.tableColumns[1] {
+                text = item.uuid
+                cellIdentifier = "uuidID"
+            } else if tableColumn == tableView.tableColumns[2] {
+                text = item.permissions
+                cellIdentifier = "permissionsID"
+            } else if tableColumn == tableView.tableColumns[3] {
+                if (item.characteristic != nil) {
+                    let bytes = item.characteristic!.value
+                    text = hexString(bytes)
+                } else {
+                    text = "not available"
+                }
+                cellIdentifier = "valueID"
+            }
+            //debugPrint("populating value for row: \(row), text: \(text), cellIdentifier: \(cellIdentifier)")
+            
+            if let cell = tableView.makeViewWithIdentifier(cellIdentifier, owner: self) as! NSTableCellView? {
+                cell.textField?.stringValue = text
+                return cell
+            }
+            debugPrint("return nil (unexpected)")
+            return nil
+    }
+
+
 }
 

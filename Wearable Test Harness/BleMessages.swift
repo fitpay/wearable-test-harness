@@ -27,6 +27,11 @@ struct ContinuationPacketMessage {
     let sortOrder: UInt16
     let data: NSData
     init(msg: NSData) {
+        if (msg.length == 0) {
+            sortOrder = 0
+            data = NSData()
+            return
+        }
         let sortOrderRange : NSRange = NSMakeRange(0, 2)
         var buffer = [UInt8](count: 2, repeatedValue: 0x00)
         msg.getBytes(&buffer, range: sortOrderRange)
@@ -60,6 +65,15 @@ struct ContinuationControlMessage {
         crc32 = UInt32()
     }
     init(msg: NSData) {
+        if (msg.length == 0) {
+            type = 0x00
+            isBeginning = false
+            isEnd = false
+            data = NSData()
+            uuid = CBUUID()
+            crc32 = UInt32()
+            return
+        }
         var buffer = [UInt8](count: (msg.length), repeatedValue: 0x00)
         msg.getBytes(&buffer, length: buffer.count)
         
@@ -110,6 +124,13 @@ struct ApduResultMessage {
     let sequenceId : UInt16
     let responseCode: NSData
     init(withMessage: NSData) {
+        if (withMessage.length == 0) {
+            msg=withMessage
+            resultCode = 0
+            sequenceId = 0
+            responseCode = NSData()
+            return
+        }
         msg = withMessage
         var buffer = [UInt8](count: (withMessage.length), repeatedValue: 0x00)
         withMessage.getBytes(&buffer, length: buffer.count)
