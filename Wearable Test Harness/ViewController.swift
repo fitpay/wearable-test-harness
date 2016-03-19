@@ -173,7 +173,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             displayServiceUUID = FitpayServiceUUID.DeviceInfoServiceUUID.rawValue;
         }
         doCharacteristicRead()
-        //characteristicTableView.reloadData();
+        characteristicTableView.reloadData();
     }
     
     var centralManager : CBCentralManager!
@@ -220,7 +220,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.apduRequest.stringValue = "FF"
         self.statusLabel.stringValue = ""
         self.continuationLabel.stringValue = ""
-        self.pairingDeviceName.stringValue = "FitPay Wearable"
+        self.pairingDeviceName.stringValue = "FitPayPD"
         self.disableUi()
         
         self.txProgress.doubleValue = 0.0
@@ -370,32 +370,33 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     func coerceUUIDStringNameToRealUUID(uuid : String) -> String {
-        if (uuid == "Manufacturer Name String") {
+        if (uuid.lowercaseString == "Manufacturer Name String".lowercaseString || uuid.lowercaseString == "2a29" ) {
             return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_MANUFACTURER_NAME_STRING.rawValue
         }
-        if (uuid == "Model Number String") {
+        if (uuid.lowercaseString == "Model Number String".lowercaseString || uuid.lowercaseString == "2a24" ) {
             return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_MODEL_NUMBER_STRING.rawValue
         }
-        if (uuid == "Serial Number String") {
+        if (uuid.lowercaseString == "Serial Number String".lowercaseString || uuid.lowercaseString == "2a25" ) {
             return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SERIAL_NUMBER_STRING.rawValue
         }
-        if (uuid == "Firmware Revision String") {
+        if (uuid.lowercaseString == "Firmware Revision String".lowercaseString || uuid.lowercaseString == "2a26" ) {
             return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_FIRMWARE_REVISION_STRING.rawValue
         }
-        if (uuid == "Hardware Revision String") {
+        if (uuid.lowercaseString == "Hardware Revision String".lowercaseString || uuid.lowercaseString == "2a27" ) {
             return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_HARDWARE_REVISION_STRING.rawValue
         }
-        if (uuid == "Software Revision String") {
+        if (uuid.lowercaseString == "Software Revision String".lowercaseString || uuid.lowercaseString == "2a28" ) {
             return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SOFTWARE_REVISION_STRING.rawValue
         }
-        if (uuid == "System ID") {
+        if (uuid.lowercaseString == "System ID".lowercaseString || uuid.lowercaseString == "2a23" ) {
             return FitpayDeviceInfoCharacteristicUUID.CHARACTERISTIC_SYSTEM_ID.rawValue
         }
+        debugPrint("No value coersion done on uuid: \(uuid)")
         return uuid
     }
     
     func peripheral(peripheral: CBPeripheral, didUpdateValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        debugPrint("didUpdateValueForCharacteristic: \(characteristic.UUID), error: \(error)")
+        debugPrint("didUpdateValueForCharacteristic: \(characteristic.UUID) value: \(hexString(characteristic.value)), error: \(error)")
         
         // update display
         updateViewForCharacteristicUpdate(characteristic)
@@ -651,7 +652,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         for characteristicInfo in characteristicArray {
             if (characteristicInfo.characteristic != nil) {
                 if (isCharacteristicReadable(characteristicInfo.characteristic!)) {
-                    debugPrint("Reading value for characteristic: \(characteristicInfo.characteristic!.UUID)")
+                    debugPrint("Reading value for characteristic: \(characteristicInfo.characteristic!.UUID.UUIDString)")
                     wearablePeripheral.readValueForCharacteristic(characteristicInfo.characteristic!)
                 }
             }
@@ -678,14 +679,12 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     
     func numberOfRowsInTableView(tableView: NSTableView) -> Int {
-        debugPrint("numberOfRowsInTableView called for displayServiceUUID: \(displayServiceUUID)")
         var numberRows = 0
         if (displayServiceUUID.lowercaseString == FitpayServiceUUID.PaymentServiceUUID.rawValue.lowercaseString) {
             numberRows = paymentServiceCharacteristicArray.count
         } else if (displayServiceUUID.lowercaseString == FitpayServiceUUID.DeviceInfoServiceUUID.rawValue.lowercaseString) {
             numberRows = deviceInfoServiceCharacteristicArray.count
         }
-        debugPrint("Number of rows in displayServiceUUID: \(numberRows)")
         return numberRows
     }
     
