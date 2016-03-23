@@ -9,6 +9,9 @@
 import Foundation
 import CoreBluetooth
 
+let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
+
+
 struct Continuation {
     var uuid : CBUUID
     var data : [NSData]
@@ -118,6 +121,24 @@ struct ContinuationControlMessage {
     }
 }
 
+struct ApduControlMessage {
+    
+    let sequenceId : UInt16
+    let data : NSData
+    let msg : NSMutableData
+    
+    init(withSequenceId: UInt16, withData: NSData) {
+        sequenceId = withSequenceId
+        data = withData
+        msg = NSMutableData()
+        var sq16 = UInt16(littleEndian: sequenceId)
+        msg.appendData(RESERVED_FOR_FUTURE_USE)
+        msg.appendBytes(&sq16, length: sizeofValue(sequenceId))
+        msg.appendData(withData)
+    }
+
+}
+
 struct ApduResultMessage {
     let msg : NSData
     let resultCode : UInt8
@@ -138,8 +159,8 @@ struct ApduResultMessage {
         resultCode = UInt8(buffer[0])
         
         var recvSeqId:UInt16?
-        recvSeqId = UInt16(buffer[1]) << 8
-        recvSeqId = recvSeqId! | UInt16(buffer[2])
+        recvSeqId = UInt16(buffer[2]) << 8
+        recvSeqId = recvSeqId! | UInt16(buffer[1])
         sequenceId = recvSeqId!
         
         let range : NSRange = NSMakeRange(withMessage.length - 2, 2)

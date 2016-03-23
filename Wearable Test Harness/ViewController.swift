@@ -14,7 +14,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     let START_CONTROL: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     let EOM_CONTROL: NSData = NSData(bytes: [0x01] as [UInt8], length: 1)
-    let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
+//TODO remove    let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     
     let ContinuationControlCharacteristic = CBUUID(string: FitpayPaymentCharacteristicUUID.ContinuationControlCharacteristic.rawValue)
     let ContinuationPacketCharacteristic = CBUUID(string: FitpayPaymentCharacteristicUUID.ContinuationPacketCharacteristic.rawValue)
@@ -96,22 +96,18 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             withContinuation = true
         }
         
-        let apduPacket = NSMutableData()
-        var sq16 = UInt16(bigEndian: sequenceId)
-        apduPacket.appendData(RESERVED_FOR_FUTURE_USE)
-        apduPacket.appendBytes(&sq16, length: sizeofValue(sequenceId))
-        apduPacket.appendData(dataFromHexString(apduRequest.stringValue)!)
+        let apduPacket = ApduControlMessage(withSequenceId: sequenceId, withData: dataFromHexString(apduRequest.stringValue)!)
         
         self.apduResult.stringValue = ""
         
         if (withContinuation) {
-            sendApduContinuation(apduPacket)
+            sendApduContinuation(apduPacket.msg)
             return
         }
         
-        debugPrint("... write apdu packet: \(apduPacket) to characteristic: \(apduControlCharacteristic.UUID), length: \(apduPacket.length)")
+        debugPrint("... write apdu control packet: \(apduPacket) to characteristic: \(apduControlCharacteristic.UUID), length: \(apduPacket.msg.length)")
         
-        wearablePeripheral.writeValue(apduPacket, forCharacteristic: apduControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+        wearablePeripheral.writeValue(apduPacket.msg, forCharacteristic: apduControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
     }
     
     @IBAction func testContinuation(sender: AnyObject) {
