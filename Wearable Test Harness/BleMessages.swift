@@ -29,7 +29,9 @@ struct Continuation {
 struct ContinuationPacketMessage {
     let sortOrder: UInt16
     let data: NSData
+    let message: NSData
     init(msg: NSData) {
+        message = msg
         if (msg.length == 0) {
             sortOrder = 0
             data = NSData()
@@ -42,13 +44,22 @@ struct ContinuationPacketMessage {
         let sortOrderData = NSData(bytes: buffer, length: 2)
         var u16 : UInt16 = 0
         sortOrderData.getBytes(&u16, length: 2)
-        sortOrder = UInt16(bigEndian: u16)
+        sortOrder = UInt16(littleEndian: u16)
         
         let range : NSRange = NSMakeRange(2, msg.length - 2)
         buffer = [UInt8](count: (msg.length) - 2, repeatedValue: 0x00)
         msg.getBytes(&buffer, range: range)
         
         data = NSData(bytes: buffer, length: (msg.length) - 2)
+    }
+    init(withSortOrder: UInt16, withData: NSData) {
+        sortOrder = withSortOrder
+        data = withData
+        let continuationPacket = NSMutableData()
+        var pn16 = UInt16(littleEndian: sortOrder)
+        continuationPacket.appendBytes(&pn16, length: sizeofValue(sortOrder))
+        continuationPacket.appendData(withData)
+        message = continuationPacket
     }
 }
 
@@ -111,7 +122,7 @@ struct ContinuationControlMessage {
             uuid = CBUUID()
             var u32 : UInt32 = 0
             data.getBytes(&u32, length: 4)
-            crc32 = UInt32(bigEndian: u32)
+            crc32 = UInt32(littleEndian: u32)
         } else {
             print("Continuation control data is not the correct length");
             uuid = CBUUID()
@@ -207,4 +218,19 @@ struct SecurityStateMessage {
         }
     }
 }
+
+    struct DeviceResetMessage {
+        
+        let op : UInt8
+        let msg : NSMutableData
+        
+        init() {
+            op = 1
+            msg = NSMutableData()
+            var sq16 = UInt8(op)
+            msg.appendBytes(&sq16, length: sizeofValue(op))
+        }
+        
+    }
+
 
