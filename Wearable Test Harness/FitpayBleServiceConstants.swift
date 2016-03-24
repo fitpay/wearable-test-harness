@@ -26,6 +26,8 @@ enum FitpayPaymentCharacteristicUUID: String {
     case NotificationCharacteristic = "37051cf0-d70e-4b3c-9e90-0f8e9278b4d3"
     case SecurityWriteCharacteristic = "e4bbb38f-5aaa-4056-8cf0-57461082d598"
     case SecurityStateCharacteristic = "ab1fe5e7-4e9d-4b8c-963f-5265dc7de466"
+    case DeviceResetCharacteristic = "50b50f72-d10a-444b-945d-d574bd67ec91"
+    case ApplicationControlCharacteristic = "6fea71ab-14ca-4921-b166-e8742e349975"
 
 }
 

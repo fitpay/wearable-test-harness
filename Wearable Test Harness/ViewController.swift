@@ -14,7 +14,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     let START_CONTROL: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     let EOM_CONTROL: NSData = NSData(bytes: [0x01] as [UInt8], length: 1)
-    let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
+//TODO remove    let RESERVED_FOR_FUTURE_USE: NSData = NSData(bytes: [0x00] as [UInt8], length: 1)
     
     let ContinuationControlCharacteristic = CBUUID(string: FitpayPaymentCharacteristicUUID.ContinuationControlCharacteristic.rawValue)
     let ContinuationPacketCharacteristic = CBUUID(string: FitpayPaymentCharacteristicUUID.ContinuationPacketCharacteristic.rawValue)
@@ -25,6 +25,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     let NotificationCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.NotificationCharacteristic.rawValue)
     let SecurityWriteCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.SecurityWriteCharacteristic.rawValue)
     let SecurityStateCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.SecurityStateCharacteristic.rawValue)
+    let DeviceResetCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.DeviceResetCharacteristic.rawValue)
+    let ApplicationControlCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.ApplicationControlCharacteristic.rawValue)
 
     let PaymentServiceUUID = CBUUID(string: FitpayServiceUUID.PaymentServiceUUID.rawValue)
     let DeviceInfoServiceUUID = CBUUID(string: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue)
@@ -38,7 +40,9 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue , withName: "Secure Element ID", withUUID: FitpayPaymentCharacteristicUUID.SecureElementIdCharacteristic.rawValue),
         CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Notification", withUUID: FitpayPaymentCharacteristicUUID.NotificationCharacteristic.rawValue),
         CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Security Write", withUUID: FitpayPaymentCharacteristicUUID.SecurityWriteCharacteristic.rawValue),
-        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Security State", withUUID: FitpayPaymentCharacteristicUUID.SecurityStateCharacteristic.rawValue)
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Security State", withUUID: FitpayPaymentCharacteristicUUID.SecurityStateCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Device Reset", withUUID: FitpayPaymentCharacteristicUUID.DeviceResetCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Application Control", withUUID: FitpayPaymentCharacteristicUUID.ApplicationControlCharacteristic.rawValue)
         ]
     
     var deviceInfoServiceCharacteristicArray: [CharacteristicInfo] = [
@@ -73,6 +77,12 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     @IBOutlet weak var securityWriteButton: NSButton!
     @IBOutlet weak var securityState: NSTextField!
     
+    
+    @IBOutlet weak var deviceReset: NSTextField!
+    
+    @IBOutlet weak var deviceResetButton: NSButton!
+    
+    @IBOutlet weak var applicationControl: NSTextField!
     @IBOutlet weak var pairingDeviceName: NSTextField!
     
     @IBOutlet weak var characteristicTableView: NSTableView!
@@ -96,22 +106,18 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             withContinuation = true
         }
         
-        let apduPacket = NSMutableData()
-        var sq16 = UInt16(bigEndian: sequenceId)
-        apduPacket.appendData(RESERVED_FOR_FUTURE_USE)
-        apduPacket.appendBytes(&sq16, length: sizeofValue(sequenceId))
-        apduPacket.appendData(dataFromHexString(apduRequest.stringValue)!)
+        let apduPacket = ApduControlMessage(withSequenceId: sequenceId, withData: dataFromHexString(apduRequest.stringValue)!)
         
         self.apduResult.stringValue = ""
         
         if (withContinuation) {
-            sendApduContinuation(apduPacket)
+            sendApduContinuation(apduPacket.msg)
             return
         }
         
-        debugPrint("... write apdu packet: \(apduPacket) to characteristic: \(apduControlCharacteristic.UUID), length: \(apduPacket.length)")
+        debugPrint("... write apdu control packet: \(apduPacket) to characteristic: \(apduControlCharacteristic.UUID), length: \(apduPacket.msg.length)")
         
-        wearablePeripheral.writeValue(apduPacket, forCharacteristic: apduControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+        wearablePeripheral.writeValue(apduPacket.msg, forCharacteristic: apduControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
     }
     
     @IBAction func testContinuation(sender: AnyObject) {
@@ -162,6 +168,20 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     }
     
     
+    @IBAction func sendDeviceReset(sender: AnyObject) {
+        print("sending device reset:  \(deviceReset.stringValue)")
+        if (deviceResetCharacteristic == nil) {
+            self.continuationLabel.stringValue = "device reset characteristic is not available on this service"
+            return
+        }
+
+        self.continuationLabel.stringValue = "sending device reset"
+        let msg = DeviceResetMessage.init().msg
+        debugPrint("... write device reset: \(msg) to characteristic: \(deviceResetCharacteristic.UUID), length: \(msg.length)")
+        wearablePeripheral.writeValue(msg, forCharacteristic: securityWriteCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+    }
+    
+    
     @IBAction func serviceViewSelected(sender: NSButton) {
         debugPrint("service view selected: \(sender.title)")
         if (sender == viewPaymentServiceButton) {
@@ -193,6 +213,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     var securityWriteCharacteristic: CBCharacteristic!
     var securityStateCharacteristic: CBCharacteristic!
     var notificationCharacteristic: CBCharacteristic!
+    var deviceResetCharacteristic: CBCharacteristic!
+    var applicationControlCharacteristic: CBCharacteristic!
     
     var startTime: NSTimeInterval = 0
     
@@ -363,7 +385,14 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
                 self.securityStateCharacteristic = thisCharacteristic
                 print(" ... subscribing to security state notifications")
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
-            }
+            } else if (thisCharacteristic.UUID == DeviceResetCharacteristicUUID) {
+                print(" ... found device reset characteristic")
+                self.deviceResetCharacteristic = thisCharacteristic
+            } else if (thisCharacteristic.UUID == ApplicationControlCharacteristicUUID) {
+                print(" ... found application control characteristic")
+                self.applicationControlCharacteristic = thisCharacteristic
+                print(" ... subscribing to application control notifications")
+                wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)           }
         }
         doCharacteristicRead()
         characteristicTableView.reloadData();
@@ -443,6 +472,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
                 }
                 debugPrint("complete response: \(hexString(completeResponse))")
                 let crc = CRC32.init(data: completeResponse).hashValue
+                debugPrint("Calculated response hash value: \(crc)")
                 let crc32 = UInt32(littleEndian: UInt32(crc))
 
                 if (crc32 != continuationControlMessage.crc32) {
@@ -542,13 +572,11 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             
             let chunk = NSData(bytes: dataToSend.bytes + sendDataIndex, length: amountToSend)
             
-            let continuationPacket = NSMutableData()
-            var pn16 = UInt16(bigEndian: packetNumber)
-            continuationPacket.appendBytes(&pn16, length: sizeofValue(packetNumber))
-            continuationPacket.appendData(chunk)
             
-            debugPrint("writing continuation packet to charactacteristic: \(continuationCharacteristicPacket.UUID), value: \(hexString(continuationPacket))")
-            wearablePeripheral.writeValue(continuationPacket, forCharacteristic: continuationCharacteristicPacket, type: CBCharacteristicWriteType.WithResponse)
+            let continuationPacket = ContinuationPacketMessage(withSortOrder: packetNumber, withData: chunk)
+           
+            debugPrint("writing continuation packet to charactacteristic: \(continuationCharacteristicPacket.UUID), value: \(hexString(continuationPacket.message))")
+            wearablePeripheral.writeValue(continuationPacket.message, forCharacteristic: continuationCharacteristicPacket, type: CBCharacteristicWriteType.WithResponse)
             
             sendDataIndex = sendDataIndex + amountToSend
             packetNumber++
@@ -556,7 +584,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         
         print("preparing continuation eom control - calculate checksum on \(dataToSend)")
         let crcValue = CRC32.init(data: dataToSend).hashValue
-        var crc32 = UInt32(bigEndian: UInt32(crcValue))
+        var crc32 = UInt32(littleEndian: UInt32(crcValue))
 
         //let crcData = NSData(bytes: &crcValue, length: sizeof(Int))
         debugPrint("apdu checksum is \(crcValue)")

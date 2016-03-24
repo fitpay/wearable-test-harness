@@ -453,7 +453,7 @@
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </clipView>
                                 <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="WJp-v6-MYQ">
-                                    <rect key="frame" x="1" y="7" width="0.0" height="16"/>
+                                    <rect key="frame" x="1" y="8" width="0.0" height="15"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="afu-eW-tZ3">
@@ -575,6 +575,51 @@
                                 <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
                                 <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                             </box>
+                            <box fixedFrame="YES" title="Device Reset" borderType="line" translatesAutoresizingMaskIntoConstraints="NO" id="i7T-jr-tGg">
+                                <rect key="frame" x="404" y="267" width="177" height="114"/>
+                                <view key="contentView" id="6u2-gS-GfN">
+                                    <rect key="frame" x="1" y="1" width="175" height="98"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                    <subviews>
+                                        <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BZi-DZ-IVQ">
+                                            <rect key="frame" x="6" y="64" width="96" height="22"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="KKE-g7-0XQ">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aZB-xw-jN2">
+                                            <rect key="frame" x="100" y="58" width="71" height="32"/>
+                                            <buttonCell key="cell" type="push" title="Send" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="J6a-V9-bh0">
+                                                <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                <font key="font" metaFont="system"/>
+                                            </buttonCell>
+                                            <connections>
+                                                <action selector="sendDeviceReset:" target="XfG-lQ-9wD" id="vva-YJ-wtQ"/>
+                                            </connections>
+                                        </button>
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Az3-4j-k1D">
+                                            <rect key="frame" x="4" y="11" width="163" height="17"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" placeholderString="Application Control" id="fkc-Q8-Chf">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                        <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="84e-vh-qce">
+                                            <rect key="frame" x="2" y="29" width="155" height="17"/>
+                                            <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Application Control" id="0yO-29-Pf8">
+                                                <font key="font" metaFont="system"/>
+                                                <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                            </textFieldCell>
+                                        </textField>
+                                    </subviews>
+                                </view>
+                                <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                                <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                            </box>
                         </subviews>
                         <constraints>
                             <constraint firstItem="NLi-Fc-j2A" firstAttribute="top" secondItem="m2S-Jp-Qdl" secondAttribute="top" constant="40" id="yxt-ho-p0P"/>
@@ -584,9 +629,12 @@
                         <outlet property="apduButton" destination="YLd-qV-y79" id="elb-kT-IdP"/>
                         <outlet property="apduRequest" destination="kvL-mH-ydL" id="wRv-aP-TDT"/>
                         <outlet property="apduResult" destination="RK2-GG-Jju" id="qpv-BU-xdj"/>
+                        <outlet property="applicationControl" destination="Az3-4j-k1D" id="6Da-O6-tnM"/>
                         <outlet property="characteristicTableView" destination="KbS-KY-B4y" id="oq2-v3-C24"/>
                         <outlet property="continuationLabel" destination="cW2-Pc-PvX" id="06I-1s-zjW"/>
                         <outlet property="continuationStepper" destination="gxU-6h-TkB" id="AHd-4t-nrr"/>
+                        <outlet property="deviceReset" destination="BZi-DZ-IVQ" id="5i0-fj-QXf"/>
+                        <outlet property="deviceResetButton" destination="aZB-xw-jN2" id="fSw-2r-GJh"/>
                         <outlet property="notificationData" destination="6c8-6A-uPZ" id="TBa-Iu-IvT"/>
                         <outlet property="pairingDeviceName" destination="Bv7-Xj-0YI" id="eSk-Rb-wgx"/>
                         <outlet property="receivedNotificationData" destination="COk-Xf-ULi" id="aZa-WL-44U"/>
@@ -771,7 +819,7 @@
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </clipView>
                                 <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="PLr-l0-MS9">
-                                    <rect key="frame" x="1" y="7" width="0.0" height="16"/>
+                                    <rect key="frame" x="1" y="8" width="0.0" height="15"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="NO" id="Ewm-zK-xVT">
