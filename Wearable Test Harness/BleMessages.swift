@@ -233,4 +233,54 @@ struct SecurityStateMessage {
         
     }
 
+struct NotificationMessage {
+    
+    let date: NSDate
+    let data: NSData
+    let message: NSData
+    
+    init() {
+        date = NSDate()
+        data = NSData()
+        message = dateMessageFrag(date)
+    }
+    
+    init(withData : NSData) {
+        data = withData
+        date = NSDate()
+        
+        let msg = dateMessageFrag(date)
+        msg.appendData(withData)
+        message = msg
+
+    }
+    
+    init(withMessage: NSData) {
+        date = NSDate()  //TODO this needs to be populated via the parsed date
+        data = NSData()  // TODO this needs to be populated from the parsed message
+        message = withMessage
+    }
+}
+
+func dateMessageFrag(date: NSDate) -> NSMutableData {
+    let calendar = NSCalendar.currentCalendar()
+    let components = calendar.components([NSCalendarUnit.Year, NSCalendarUnit.Month, NSCalendarUnit.Day, NSCalendarUnit.Hour, NSCalendarUnit.Minute, NSCalendarUnit.Second], fromDate: date)
+
+    let msg = NSMutableData()
+    var sq16 = UInt16(Int(components.year))
+    msg.appendBytes(&sq16, length: 2)
+    var sq8 = UInt8(Int(components.month))
+    msg.appendBytes(&sq8, length: 1)
+    sq8 = UInt8(Int(components.day))
+    msg.appendBytes(&sq8, length: 1)
+    sq8 = UInt8(Int(components.hour))
+    msg.appendBytes(&sq8, length: 1)
+    sq8 = UInt8(Int(components.minute))
+    msg.appendBytes(&sq8, length: 1)
+    sq8 = UInt8(Int(components.second))
+    msg.appendBytes(&sq8, length: 1)
+    return msg
+    
+}
+
 

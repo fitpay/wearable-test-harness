@@ -141,7 +141,15 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
 
     @IBAction func sendNotification(sender: NSButton) {
         self.continuationLabel.stringValue = "sending notification to device"
-        debugPrint("sendNotification is not implemented")
+        if (notificationCharacteristic == nil) {
+            self.continuationLabel.stringValue = "notification characteristic is not available on this service"
+            return
+        }
+        
+        self.continuationLabel.stringValue = "sending notification to device"
+        let msg = NotificationMessage(withData: dataFromHexString(notificationData.stringValue)!)
+        debugPrint("... write device notification: \(msg.message) to characteristic: \(notificationCharacteristic.UUID), length: \(msg.message.length)")
+        wearablePeripheral.writeValue(msg.message, forCharacteristic: notificationCharacteristic, type: CBCharacteristicWriteType.WithResponse)
     }
 
     
@@ -178,7 +186,7 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         self.continuationLabel.stringValue = "sending device reset"
         let msg = DeviceResetMessage.init().msg
         debugPrint("... write device reset: \(msg) to characteristic: \(deviceResetCharacteristic.UUID), length: \(msg.length)")
-        wearablePeripheral.writeValue(msg, forCharacteristic: securityWriteCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+        wearablePeripheral.writeValue(msg, forCharacteristic: deviceResetCharacteristic, type: CBCharacteristicWriteType.WithResponse)
     }
     
     
@@ -512,6 +520,10 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             debugPrint("Security state characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
             self.continuationLabel.stringValue = "Received security state update:  \(hexString(characteristic.value))"
             self.securityState.stringValue = "\(hexString(characteristic.value))"
+        } else if characteristic.UUID == ApplicationControlCharacteristicUUID {
+            debugPrint("Application control characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
+            self.continuationLabel.stringValue = "Received application control update:  \(hexString(characteristic.value))"
+            self.applicationControl.stringValue = "\(hexString(characteristic.value))"
         }
 
     }
@@ -610,22 +622,22 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     
     
     func disableUi() {
-        self.testButton.enabled = false
-        self.apduRequest.enabled = false
-        self.apduButton.enabled = false
-        self.sequenceIdTextField.enabled = false
-        self.securityWriteButton.enabled = false
-        self.sendNotification.enabled = false
-
+        enableUi(false)
     }
     
     func enableUi() {
-        self.testButton.enabled = true
-        self.apduRequest.enabled = true
-        self.apduButton.enabled = true
-        self.sequenceIdTextField.enabled = true
-        self.securityWriteButton.enabled = true
-        self.sendNotification.enabled = true
+        enableUi(true)
+    }
+    
+    func enableUi(value: Bool) {
+            self.testButton.enabled = value
+            self.apduRequest.enabled = value
+            self.apduButton.enabled = value
+            self.sequenceIdTextField.enabled = value
+            self.securityWriteButton.enabled = value
+            self.sendNotification.enabled = value
+            self.deviceResetButton.enabled = value
+            self.deviceReset.enabled = value
     }
     
     func postResult(apduResultMessage: ApduResultMessage, elapsedTimeStr: String) {
