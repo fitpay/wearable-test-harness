@@ -25,8 +25,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     let NotificationCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.NotificationCharacteristic.rawValue)
     let SecurityWriteCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.SecurityWriteCharacteristic.rawValue)
     let SecurityStateCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.SecurityStateCharacteristic.rawValue)
-    let DeviceResetCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.DeviceResetCharacteristic.rawValue)
-    let ApplicationControlCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.ApplicationControlCharacteristic.rawValue)
+    let DeviceControlCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.DeviceControlCharacteristic.rawValue)
+    let ApplicationStatusCharacteristicUUID = CBUUID(string: FitpayPaymentCharacteristicUUID.ApplicationStatusCharacteristic.rawValue)
 
     let PaymentServiceUUID = CBUUID(string: FitpayServiceUUID.PaymentServiceUUID.rawValue)
     let DeviceInfoServiceUUID = CBUUID(string: FitpayServiceUUID.DeviceInfoServiceUUID.rawValue)
@@ -41,8 +41,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Notification", withUUID: FitpayPaymentCharacteristicUUID.NotificationCharacteristic.rawValue),
         CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Security Write", withUUID: FitpayPaymentCharacteristicUUID.SecurityWriteCharacteristic.rawValue),
         CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Security State", withUUID: FitpayPaymentCharacteristicUUID.SecurityStateCharacteristic.rawValue),
-        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Device Reset", withUUID: FitpayPaymentCharacteristicUUID.DeviceResetCharacteristic.rawValue),
-        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Application Control", withUUID: FitpayPaymentCharacteristicUUID.ApplicationControlCharacteristic.rawValue)
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Device Control", withUUID: FitpayPaymentCharacteristicUUID.DeviceControlCharacteristic.rawValue),
+        CharacteristicInfo(withServiceUUID: FitpayServiceUUID.PaymentServiceUUID.rawValue, withName: "Application Status", withUUID: FitpayPaymentCharacteristicUUID.ApplicationStatusCharacteristic.rawValue)
         ]
     
     var deviceInfoServiceCharacteristicArray: [CharacteristicInfo] = [
@@ -78,6 +78,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     @IBOutlet weak var securityState: NSTextField!
     
     
+    @IBOutlet weak var secureElementOnButton: NSButton!
+    @IBOutlet weak var secureElementOffButton: NSButton!
     @IBOutlet weak var deviceReset: NSTextField!
     
     @IBOutlet weak var deviceResetButton: NSButton!
@@ -175,18 +177,37 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
         }
     }
     
+    @IBAction func sendSecureElementOnOff(sender: NSButton) {
+        debugPrint("sending secure element on/off: \(sender.title)")
+        if (deviceControlCharacteristic == nil) {
+            self.continuationLabel.stringValue = "device control characteristic is not available on this service"
+            return
+        }
+        var op = UInt8(0)
+        if sender == secureElementOnButton {
+            op = UInt8(2)
+        } else if sender == secureElementOffButton {
+            op = UInt8(0)
+        } else {
+            return
+        }
+        self.continuationLabel.stringValue = "sending secure element on/off.  Operation: \(op)"
+        let msg = DeviceResetMessage(withOp: op).msg
+        debugPrint("... write secure element on/off: \(msg) to characteristic: \(deviceControlCharacteristic.UUID), length: \(msg.length)")
+        wearablePeripheral.writeValue(msg, forCharacteristic: deviceControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+    }
     
     @IBAction func sendDeviceReset(sender: AnyObject) {
-        print("sending device reset:  \(deviceReset.stringValue)")
-        if (deviceResetCharacteristic == nil) {
-            self.continuationLabel.stringValue = "device reset characteristic is not available on this service"
+        print("sending secure element reset")
+        if (deviceControlCharacteristic == nil) {
+            self.continuationLabel.stringValue = "device control characteristic is not available on this service"
             return
         }
 
-        self.continuationLabel.stringValue = "sending device reset"
-        let msg = DeviceResetMessage.init().msg
-        debugPrint("... write device reset: \(msg) to characteristic: \(deviceResetCharacteristic.UUID), length: \(msg.length)")
-        wearablePeripheral.writeValue(msg, forCharacteristic: deviceResetCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+        self.continuationLabel.stringValue = "sending secure element reset"
+        let msg = DeviceResetMessage(withOp: 1).msg
+        debugPrint("... write secure element reset: \(msg) to characteristic: \(deviceControlCharacteristic.UUID), length: \(msg.length)")
+        wearablePeripheral.writeValue(msg, forCharacteristic: deviceControlCharacteristic, type: CBCharacteristicWriteType.WithResponse)
     }
     
     
@@ -221,8 +242,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
     var securityWriteCharacteristic: CBCharacteristic!
     var securityStateCharacteristic: CBCharacteristic!
     var notificationCharacteristic: CBCharacteristic!
-    var deviceResetCharacteristic: CBCharacteristic!
-    var applicationControlCharacteristic: CBCharacteristic!
+    var deviceControlCharacteristic: CBCharacteristic!
+    var applicationStatusCharacteristic: CBCharacteristic!
     
     var startTime: NSTimeInterval = 0
     
@@ -393,12 +414,12 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
                 self.securityStateCharacteristic = thisCharacteristic
                 print(" ... subscribing to security state notifications")
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)
-            } else if (thisCharacteristic.UUID == DeviceResetCharacteristicUUID) {
+            } else if (thisCharacteristic.UUID == DeviceControlCharacteristicUUID) {
                 print(" ... found device reset characteristic")
-                self.deviceResetCharacteristic = thisCharacteristic
-            } else if (thisCharacteristic.UUID == ApplicationControlCharacteristicUUID) {
+                self.deviceControlCharacteristic = thisCharacteristic
+            } else if (thisCharacteristic.UUID == ApplicationStatusCharacteristicUUID) {
                 print(" ... found application control characteristic")
-                self.applicationControlCharacteristic = thisCharacteristic
+                self.applicationStatusCharacteristic = thisCharacteristic
                 print(" ... subscribing to application control notifications")
                 wearablePeripheral.setNotifyValue(true, forCharacteristic: thisCharacteristic)           }
         }
@@ -520,9 +541,9 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             debugPrint("Security state characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
             self.continuationLabel.stringValue = "Received security state update:  \(hexString(characteristic.value))"
             self.securityState.stringValue = "\(hexString(characteristic.value))"
-        } else if characteristic.UUID == ApplicationControlCharacteristicUUID {
-            debugPrint("Application control characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
-            self.continuationLabel.stringValue = "Received application control update:  \(hexString(characteristic.value))"
+        } else if characteristic.UUID == ApplicationStatusCharacteristicUUID {
+            debugPrint("Application status characteristic update.   \(characteristic.UUID) with value: \(hexString(characteristic.value))")
+            self.continuationLabel.stringValue = "Received application status update:  \(hexString(characteristic.value))"
             self.applicationControl.stringValue = "\(hexString(characteristic.value))"
         }
 
@@ -637,7 +658,8 @@ class ViewController: NSViewController, CBCentralManagerDelegate, CBPeripheralDe
             self.securityWriteButton.enabled = value
             self.sendNotification.enabled = value
             self.deviceResetButton.enabled = value
-            self.deviceReset.enabled = value
+        self.secureElementOnButton.enabled = value
+        self.secureElementOffButton.enabled = value
     }
     
     func postResult(apduResultMessage: ApduResultMessage, elapsedTimeStr: String) {
