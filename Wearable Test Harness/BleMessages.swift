@@ -224,8 +224,8 @@ struct SecurityStateMessage {
         let op : UInt8
         let msg : NSMutableData
         
-        init() {
-            op = 1
+        init(withOp: UInt8) {
+            op = withOp
             msg = NSMutableData()
             var sq16 = UInt8(op)
             msg.appendBytes(&sq16, length: sizeofValue(op))
